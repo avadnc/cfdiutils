@@ -18,7 +18,7 @@ class Cfdiproduct extends Product
 		'claveprodserv' => array('type' => 'varchar(50)', 'label' => 'Claveprodserv', 'enabled' => 1, 'visible' => -1, 'notnull' => 1, 'position' => 25),
 		'objetoimp' => array('type' => 'varchar(2)', 'label' => 'ObjetoImp', 'enabled' => 1, 'visible' => -1, 'notnull' => 1, 'position' => 30),
 		'unidad' => array('type' => 'varchar(50)', 'label' => 'Unidad', 'enabled' => 1, 'visible' => -1, 'notnull' => 1, 'position' => 40),
-		'entity' => array('type'=>'integer','label'=>'entity', 'enabled' => 1, 'visible' => -1, 'notnull' => 1, 'position' => 45)
+		'entity' => array('type' => 'integer', 'label' => 'entity', 'enabled' => 1, 'visible' => -1, 'notnull' => 1, 'position' => 45)
 	);
 
 
@@ -31,7 +31,6 @@ class Cfdiproduct extends Product
 
 		if (!empty($this->umed)) {
 			$this->umed = dol_sanitizeFileName(dol_string_nospecial(trim($this->umed)));
-
 		} else {
 			$error++;
 			$this->error = 'FailUmed';
@@ -81,7 +80,7 @@ class Cfdiproduct extends Product
 				$sql .= ",'" . $this->claveprodserv . "'";
 				$sql .= ",'" . $this->objetoimp . "'";
 				$sql .= ",'" . $this->unidad . "'";
-				$sql .= ",".$this->entity;
+				$sql .= "," . $this->entity;
 				$sql .= ")";
 
 				dol_syslog(get_class($this) . "::Create", LOG_DEBUG);
@@ -99,6 +98,9 @@ class Cfdiproduct extends Product
 					$this->db->rollback();
 					return -$error;
 				}
+			} else {
+
+				return 'RecordExists';
 			}
 		}
 	}
@@ -113,7 +115,6 @@ class Cfdiproduct extends Product
 
 	public function getFiscal()
 	{
-
 		$sql = "SELECT umed, claveprodserv, objetoimp, unidad FROM " . MAIN_DB_PREFIX . "cfdiutils_product WHERE fk_product = " . $this->id;
 		$resql = $this->db->query($sql);
 		$num_rows = $this->db->num_rows($resql);
@@ -126,5 +127,34 @@ class Cfdiproduct extends Product
 			$this->objetoimp = $obj->objetoimp;
 			$this->unidad = $obj->unidad;
 		}
+	}
+
+	/**
+	 *   Get product fiscal dictionary from database
+	 *
+	 * @param  table $table     last sufix table from c_cfdiutils_$table
+	 * @return array            array()
+	 */
+	public function getDictionary($table)
+	{
+		$sql = "SELECT count(*) as nb FROM " . MAIN_DB_PREFIX . "c_cfdiutils_" . $table . " WHERE active = 1";
+		$result = $this->db->query($sql);
+		if ($result) {
+			$datatable = [];
+			$obj = $this->db->fetch_object($result);
+			if ($obj->nb > 0) {
+				$sql = "SELECT code, label FROM " . MAIN_DB_PREFIX . "c_cfdiutils_" . $table ." WHERE active = 1";
+				$resql = $this->db->query($sql);
+				$num = $this->db->num_rows($resql);
+				$i = 0;
+				while($i < $num){
+					$obj = $this->db->fetch_object($resql);
+					$datatable[$obj->code] = $obj->label;
+					$i++;
+				}
+			}
+		}
+
+		return $datatable;
 	}
 }

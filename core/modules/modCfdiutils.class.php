@@ -115,6 +115,9 @@ class modCfdiutils extends DolibarrModules
 			),
 			// Set here all hooks context managed by module. To find available hook context, make a "grep -r '>initHooks(' *" on source code. You can also set hook context to 'all'
 			'hooks' => array(
+				'productcard',
+				'paymentcard', // !ficha pago realizado
+				'paiementcard' // !ficha cuando se realiza el pago
 				//   'data' => array(
 				//       'hookcontext1',
 				//       'hookcontext2',
@@ -174,6 +177,10 @@ class modCfdiutils extends DolibarrModules
 		// Array to add new pages in new tabs
 		$this->tabs = array();
 		// Example:
+		$this->tabs[] = [
+			//ejemplo de añadir pestaña
+			// 'data' => 'product:+productfiscal:Datos Fiscales:cfdiutils@cfdiutils:true:/cfdiutils/product/fiscal.php?id=__ID__'
+		];
 		// $this->tabs[] = array('data'=>'objecttype:+tabname1:Title1:mylangfile@cfdiutils:$user->rights->cfdiutils->read:/cfdiutils/mynewtab1.php?id=__ID__');  					// To add a new tab identified by code tabname1
 		// $this->tabs[] = array('data'=>'objecttype:+tabname2:SUBSTITUTION_Title2:mylangfile@cfdiutils:$user->rights->othermodule->read:/cfdiutils/mynewtab2.php?id=__ID__',  	// To add another new tab identified by code tabname2. Label will be result of calling all substitution functions on 'Title2' key.
 		// $this->tabs[] = array('data'=>'objecttype:-tabname:NU:conditiontoremove');                                                     										// To remove an existing tab identified by code tabname
@@ -413,46 +420,46 @@ class modCfdiutils extends DolibarrModules
 		);
 		*/
 
-        $this->menu[$r++]=array(
-            // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
-            'fk_menu'=>'fk_mainmenu=cfdiutils',
-            // This is a Left menu entry
-            'type'=>'left',
-            'titre'=>'List Facture',
-            'mainmenu'=>'cfdiutils',
-            'leftmenu'=>'cfdiutils_facture',
-            'url'=>'/cfdiutils/facture_list.php',
-            // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
-            'langs'=>'cfdiutils@cfdiutils',
-            'position'=>1100+$r,
-            // Define condition to show or hide menu entry. Use '$conf->cfdiutils->enabled' if entry must be visible if module is enabled. Use '$leftmenu==\'system\'' to show if leftmenu system is selected.
-            'enabled'=>'$conf->cfdiutils->enabled',
-            // Use 'perms'=>'$user->rights->cfdiutils->level1->level2' if you want your menu with a permission rules
-            'perms'=>'1',
-            'target'=>'',
-            // 0=Menu for internal users, 1=external users, 2=both
-            'user'=>2,
-        );
-        $this->menu[$r++]=array(
-            // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
-            'fk_menu'=>'fk_mainmenu=cfdiutils,fk_leftmenu=cfdiutils_facture',
-            // This is a Left menu entry
-            'type'=>'left',
-            'titre'=>'New Facture',
-            'mainmenu'=>'cfdiutils',
-            'leftmenu'=>'cfdiutils_facture',
-            'url'=>'/cfdiutils/facture_card.php?action=create',
-            // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
-            'langs'=>'cfdiutils@cfdiutils',
-            'position'=>1100+$r,
-            // Define condition to show or hide menu entry. Use '$conf->cfdiutils->enabled' if entry must be visible if module is enabled. Use '$leftmenu==\'system\'' to show if leftmenu system is selected.
-            'enabled'=>'$conf->cfdiutils->enabled',
-            // Use 'perms'=>'$user->rights->cfdiutils->level1->level2' if you want your menu with a permission rules
-            'perms'=>'1',
-            'target'=>'',
-            // 0=Menu for internal users, 1=external users, 2=both
-            'user'=>2
-        );
+        // $this->menu[$r++]=array(
+        //     // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+        //     'fk_menu'=>'fk_mainmenu=cfdiutils',
+        //     // This is a Left menu entry
+        //     'type'=>'left',
+        //     'titre'=>'List Facture',
+        //     'mainmenu'=>'cfdiutils',
+        //     'leftmenu'=>'cfdiutils_facture',
+        //     'url'=>'/cfdiutils/facture_list.php',
+        //     // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+        //     'langs'=>'cfdiutils@cfdiutils',
+        //     'position'=>1100+$r,
+        //     // Define condition to show or hide menu entry. Use '$conf->cfdiutils->enabled' if entry must be visible if module is enabled. Use '$leftmenu==\'system\'' to show if leftmenu system is selected.
+        //     'enabled'=>'$conf->cfdiutils->enabled',
+        //     // Use 'perms'=>'$user->rights->cfdiutils->level1->level2' if you want your menu with a permission rules
+        //     'perms'=>'1',
+        //     'target'=>'',
+        //     // 0=Menu for internal users, 1=external users, 2=both
+        //     'user'=>2,
+        // );
+        // $this->menu[$r++]=array(
+        //     // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+        //     'fk_menu'=>'fk_mainmenu=cfdiutils,fk_leftmenu=cfdiutils_facture',
+        //     // This is a Left menu entry
+        //     'type'=>'left',
+        //     'titre'=>'New Facture',
+        //     'mainmenu'=>'cfdiutils',
+        //     'leftmenu'=>'cfdiutils_facture',
+        //     'url'=>'/cfdiutils/facture_card.php?action=create',
+        //     // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+        //     'langs'=>'cfdiutils@cfdiutils',
+        //     'position'=>1100+$r,
+        //     // Define condition to show or hide menu entry. Use '$conf->cfdiutils->enabled' if entry must be visible if module is enabled. Use '$leftmenu==\'system\'' to show if leftmenu system is selected.
+        //     'enabled'=>'$conf->cfdiutils->enabled',
+        //     // Use 'perms'=>'$user->rights->cfdiutils->level1->level2' if you want your menu with a permission rules
+        //     'perms'=>'1',
+        //     'target'=>'',
+        //     // 0=Menu for internal users, 1=external users, 2=both
+        //     'user'=>2
+        // );
 
 		/* END MODULEBUILDER LEFTMENU FACTURE */
 		// Exports profiles provided by this module
@@ -527,11 +534,11 @@ class modCfdiutils extends DolibarrModules
 		// Create extrafields during init
 		include_once DOL_DOCUMENT_ROOT . '/core/class/extrafields.class.php';
 		$extrafields = new ExtraFields($this->db);
-		$result1 = $extrafields->addExtraField('umed', 'Unidad de Medida', 'sellist', 1, 10, 'product', 0, 1, '', ['options' => ['c_cfdiutils_umed:label:code::active:1' => NULL]]);
-		$result2 = $extrafields->addExtraField('claveprodserv', 'Clave Producto o Servicio', 'sellist', 1, 10, 'product', 0, 1, '', ['options' => ['c_cfdiutils_claveprodserv:label:code::active:1' => NULL]]);
-		$result3 = $extrafields->addExtraField('metodopago', 'Método de pago CFDI', 'sellist', 1, 10, 'facture', 0, 1, '', ['options' => ['c_cfdiutils_metodopago:label:code::active:1' => NULL]]);
-		$result4 = $extrafields->addExtraField('usocfdi', 'Uso del CFDI', 'sellist', 10, 10, 'facture', 0, 1, '', ['options' => ['c_cfdiutils_usocfdi:label:code::active:1' => NULL]]);
-		$result5 = $extrafields->addExtraField('tiporelacion', 'Tipo de relación Doc. CFDI', 'sellist', 10, 10, 'facture', 0, 1, '', ['options' => ['c_cfdiutils_tiporelacion:label:code::active:1' => NULL]]);
+		// $result1 = $extrafields->addExtraField('umed', 'Unidad de Medida', 'sellist', 1, 10, 'product', 0, 1, '', ['options' => ['c_cfdiutils_umed:label:code::active:1' => NULL]]);
+		// $result2 = $extrafields->addExtraField('claveprodserv', 'Clave Producto o Servicio', 'sellist', 1, 10, 'product', 0, 1, '', ['options' => ['c_cfdiutils_claveprodserv:label:code::active:1' => NULL]]);
+		// $result3 = $extrafields->addExtraField('metodopago', 'Método de pago CFDI', 'sellist', 1, 10, 'facture', 0, 1, '', ['options' => ['c_cfdiutils_metodopago:label:code::active:1' => NULL]]);
+		// $result4 = $extrafields->addExtraField('usocfdi', 'Uso del CFDI', 'sellist', 10, 10, 'facture', 0, 1, '', ['options' => ['c_cfdiutils_usocfdi:label:code::active:1' => NULL]]);
+		// $result5 = $extrafields->addExtraField('tiporelacion', 'Tipo de relación Doc. CFDI', 'sellist', 10, 10, 'facture', 0, 1, '', ['options' => ['c_cfdiutils_tiporelacion:label:code::active:1' => NULL]]);
 
 		//$result1=$extrafields->addExtraField('cfdiutils_myattr1', "New Attr 1 label", 'boolean', 1,  3, 'thirdparty',   0, 0, '', '', 1, '', 0, 0, '', '', 'cfdiutils@cfdiutils', '$conf->cfdiutils->enabled');
 		//$result2=$extrafields->addExtraField('cfdiutils_myattr2', "New Attr 2 label", 'varchar', 1, 10, 'project',      0, 0, '', '', 1, '', 0, 0, '', '', 'cfdiutils@cfdiutils', '$conf->cfdiutils->enabled');

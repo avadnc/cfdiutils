@@ -100,25 +100,26 @@ class ActionsCfdiutils
 
 		/* Detectar si el producto es fiscal */
 
-		if(in_array($parameters['currentcontext'],['productcard'])){
+		if (in_array($parameters['currentcontext'], ['productcard'])) {
 
 
-			if($object->id != null){
-				include 'cfdiproduct.class.php';
-				$fiscalProd = new Cfdiproduct($db);
-				$fiscalProd->fetch($object->id);
-				$fiscalProd->claveprodserv = "01010101";
-				$fiscalProd->objetoimp = "02";
-				$fiscalProd->unidad = "pieza";
-				$fiscalProd->umed = "H87";
-				$result = $fiscalProd->createFiscal();
-				if ($result == "InsertSuccess"){
+			// if($object->id != null){
+			// 	include 'cfdiproduct.class.php';
+			// 	$fiscalProd = new Cfdiproduct($db);
+			// 	$fiscalProd->fetch($object->id);
+			// 	$fiscalProd->claveprodserv = "01010101";
+			// 	$fiscalProd->objetoimp = "02";
+			// 	$fiscalProd->unidad = "pieza";
+			// 	$fiscalProd->umed = "H87";
+			// 	$result = $fiscalProd->createFiscal();
 
-				echo '<pre>';var_dump($fiscalProd);exit;
-				} else {
-					var_dump($result);exit;
-				}
-			}
+			// 	if ($result == "InsertSuccess"){
+
+			// 	echo '<pre>';var_dump($fiscalProd);exit;
+			// 	} else {
+			// 		var_dump($result);exit;
+			// 	}
+			// }
 		}
 
 
@@ -190,7 +191,7 @@ class ActionsCfdiutils
 
 		/* print_r($parameters); print_r($object); echo "action: " . $action; */
 		if (in_array($parameters['currentcontext'], array('somecontext1', 'somecontext2'))) {		// do something only for the context 'somecontext1' or 'somecontext2'
-			$this->resprints = '<option value="0"'.($disabled ? ' disabled="disabled"' : '').'>'.$langs->trans("CfdiutilsMassAction").'</option>';
+			$this->resprints = '<option value="0"' . ($disabled ? ' disabled="disabled"' : '') . '>' . $langs->trans("CfdiutilsMassAction") . '</option>';
 		}
 
 		if (!$error) {
@@ -220,8 +221,9 @@ class ActionsCfdiutils
 
 		$outputlangs = $langs;
 
-		$ret = 0; $deltemp = array();
-		dol_syslog(get_class($this).'::executeHooks action='.$action);
+		$ret = 0;
+		$deltemp = array();
+		dol_syslog(get_class($this) . '::executeHooks action=' . $action);
 
 		/* print_r($parameters); print_r($object); echo "action: " . $action; */
 		if (in_array($parameters['currentcontext'], array('somecontext1', 'somecontext2'))) {		// do something only for the context 'somecontext1' or 'somecontext2'
@@ -247,8 +249,9 @@ class ActionsCfdiutils
 
 		$outputlangs = $langs;
 
-		$ret = 0; $deltemp = array();
-		dol_syslog(get_class($this).'::executeHooks action='.$action);
+		$ret = 0;
+		$deltemp = array();
+		dol_syslog(get_class($this) . '::executeHooks action=' . $action);
 
 		/* print_r($parameters); print_r($object); echo "action: " . $action; */
 		if (in_array($parameters['currentcontext'], array('somecontext1', 'somecontext2'))) {
@@ -289,7 +292,7 @@ class ActionsCfdiutils
 			$this->results['picto'] = 'cfdiutils@cfdiutils';
 		}
 
-		$head[$h][0] = 'customreports.php?objecttype='.$parameters['objecttype'].(empty($parameters['tabfamily']) ? '' : '&tabfamily='.$parameters['tabfamily']);
+		$head[$h][0] = 'customreports.php?objecttype=' . $parameters['objecttype'] . (empty($parameters['tabfamily']) ? '' : '&tabfamily=' . $parameters['tabfamily']);
 		$head[$h][1] = $langs->trans("CustomReports");
 		$head[$h][2] = 'customreports';
 
@@ -359,7 +362,7 @@ class ActionsCfdiutils
 			if (in_array($element, ['context1', 'context2'])) {
 				$datacount = 0;
 
-				$parameters['head'][$counter][0] = dol_buildpath('/cfdiutils/cfdiutils_tab.php', 1) . '?id=' . $id . '&amp;module='.$element;
+				$parameters['head'][$counter][0] = dol_buildpath('/cfdiutils/cfdiutils_tab.php', 1) . '?id=' . $id . '&amp;module=' . $element;
 				$parameters['head'][$counter][1] = $langs->trans('CfdiutilsTab');
 				if ($datacount > 0) {
 					$parameters['head'][$counter][1] .= '<span class="badge marginleftonlyshort">' . $datacount . '</span>';
@@ -379,4 +382,84 @@ class ActionsCfdiutils
 	}
 
 	/* Add here any other hooked methods... */
+
+	public function formObjectOptions(&$parameters, &$object, &$action)
+	{
+		global $db, $langs;
+		$form = new Form($db);
+
+		if (in_array($parameters['currentcontext'], ['productcard'])) {
+
+			if ($object->array_options['options_fiscal'] == 1) {
+				include 'cfdiproduct.class.php';
+				$cfdiproduct = new Cfdiproduct($db);
+				$cfdiproduct->fetch(3);
+
+				if (
+					$cfdiproduct->umed == null ||
+					$cfdiproduct->claveprodserv == null ||
+					$cfdiproduct->objetoimp == null ||
+					$cfdiproduct->unidad == null
+				) {
+					echo '<tr><td>Datos Fiscales</td>';
+					echo '<td><a class="butAction" href="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&action=addfiscal">Añadir</a></td></tr>';
+				} else {
+					echo '<tr><td>Datos Fiscales</td>';
+					echo '<td><a class="butAction" href="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&action=modifyfiscal">Añadir</a></td></tr>';
+				}
+
+				if ($action == "addfiscal") {
+					$umed = $cfdiproduct->getDictionary('umed');
+					$claveprodserv = $cfdiproduct->getDictionary('claveprodserv');
+					var_dump($claveprodserv);
+					$objetoimp = [
+						"01" => "01 - No objeto de impuesto.",
+						"02" => "02 - Sí objeto de impuesto.",
+						"03" => "03 - Sí objeto del impuesto y no obligado al desglose.",
+					];
+
+					$formquestion = array(
+
+						'text' => '<h2>' . $langs->trans("selectProductFiscal") . '</h2>',
+						['type' => 'select', 'name' => 'umed', 'id' => 'umed', 'label' => 'Unidad de Medida', 'values' => $umed],
+						['type' => 'select', 'name' => 'claveprodserv', 'id' => 'claveprodserv', 'label' => 'ClaveProdServ', 'values' => $claveprodserv],
+						['type' => 'select', 'name' => 'objetoimp', 'id' => 'objetoimp', 'label' => 'Objeto de Impuesto', 'values' => $objetoimp],
+
+					);
+					$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"] . '?id=' . $object->id, $langs->trans('selectProductFiscal'), $text, 'confirm_valid', $formquestion, 0, 1, 300, 600);
+					print $formconfirm;
+
+					echo '<script>$(document).ready(function(){
+						$(".select2-container").css("width","20rem");
+					});</script>';
+				}
+			}
+		}
+
+		if (in_array($parameters['currentcontext'], ['paymentcard', 'paiementcard'])) {
+			echo '<tr><td>Hola</td><td>Caracola</td></tr>';
+		}
+	}
+
+	public function printFieldListValue(&$parameters, &$objp, &$action)
+	{
+
+		// if (in_array($parameters['currentcontext'], ['paiementcard'])) {
+		// 	echo '<td>Hola</td><td>Caracola</td>';
+		// }
+	}
+
+	public function printObjectLine(&$parameters, &$objp, &$action)
+	{
+		var_dump($objp);
+		if (in_array($parameters['currentcontext'], ['paiementcard'])) {
+			echo '<td>Adios</td><td>Caracola</td>';
+		}
+	}
+
+	public function addMoreActionsButtons(&$parameters, &$object, &$action)
+	{
+
+		// print '<button class="butAction">Pago CFDI</button>';
+	}
 }
