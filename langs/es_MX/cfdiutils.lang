@@ -52,6 +52,7 @@ MyPageName = My page name
 MyWidget = My widget
 MyWidgetDescription = My widget description
 
-
+dataFiscal=Datos SAT
 insertDataFiscal = Insertar datos fiscales
 selectProductFiscal = Datos fiscales para producto
+CfdiproductImport= Importar datos fiscales

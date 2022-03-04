@@ -1,5 +1,28 @@
 <?php
 
+/* Copyright (C) 2017  Laurent Destailleur <eldy@users.sourceforge.net>
+ * Copyright (C) 2022  Alex Vives <gerencia@vivescloud.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+/**
+ * \file        class/cfdiproduct.class.php
+ * \ingroup     cfdiutils
+ * \brief       This file is a CRUD class file for Cfdiproduct (Create/Read/Update/Delete)
+ */
+
 require_once DOL_DOCUMENT_ROOT . '/product/class/product.class.php';
 
 class Cfdiproduct extends Product
@@ -48,12 +71,7 @@ class Cfdiproduct extends Product
 			$error++;
 			$this->error = 'FailObjetoimp';
 		}
-		if (!empty($this->unidad)) {
-			$this->unidad = dol_sanitizeFileName(dol_string_nospecial(trim($this->unidad)));
-		} else {
-			$error++;
-			$this->error = 'Failunidad';
-		}
+		$this->unidad = dol_sanitizeFileName(dol_string_nospecial(trim($this->unidad)));
 
 		if ($error != 0) {
 			dol_syslog(get_class($this) . "::Create fails verify " . join(',', $this->error), LOG_WARNING);
@@ -73,14 +91,12 @@ class Cfdiproduct extends Product
 				$sql .= ", claveprodserv";
 				$sql .= ", objetoimp";
 				$sql .= ", unidad";
-				$sql .= ",entity";
 				$sql .= ") VALUES (";
 				$sql .= $this->fk_product;
 				$sql .= ",'" . $this->umed . "'";
 				$sql .= ",'" . $this->claveprodserv . "'";
 				$sql .= ",'" . $this->objetoimp . "'";
 				$sql .= ",'" . $this->unidad . "'";
-				$sql .= "," . $this->entity;
 				$sql .= ")";
 
 				dol_syslog(get_class($this) . "::Create", LOG_DEBUG);
@@ -107,15 +123,70 @@ class Cfdiproduct extends Product
 
 	public function updateFiscal()
 	{
+		$error = 0;
+		$this->error = [];
+
+		$this->fk_product = $this->id;
+
+		if (!empty($this->umed)) {
+			$this->umed = dol_sanitizeFileName(dol_string_nospecial(trim($this->umed)));
+		} else {
+			$error++;
+			$this->error = 'FailUmed';
+		}
+		if (!empty($this->claveprodserv)) {
+
+			$this->claveprodserv = dol_sanitizeFileName(dol_string_nospecial(trim($this->claveprodserv)));
+		} else {
+			$error++;
+			$this->error = 'FailClaveprodserv';
+		}
+		if (!empty($this->objetoimp)) {
+			$this->objetoimp = dol_sanitizeFileName(dol_string_nospecial(trim($this->objetoimp)));
+		} else {
+			$error++;
+			$this->error = 'FailObjetoimp';
+		}
+		$this->unidad = dol_sanitizeFileName(dol_string_nospecial(trim($this->unidad)));
+
+		if ($error != 0) {
+			dol_syslog(get_class($this) . "::Create fails verify " . join(',', $this->error), LOG_WARNING);
+			return -$error;
+		}
+
+		$this->db->begin();
+
+		$sql = "UPDATE " . MAIN_DB_PREFIX . "cfdiutils_product ";
+		$sql .= $this->umed ? " SET umed = '" . $this->umed . "'" : '';
+		$sql .= $this->claveprodserv ? ", claveprodserv = '" . $this->claveprodserv . "'" : '';
+		$sql .= $this->objetoimp ? ", objetoimp = '" . $this->objetoimp . "'" : '';
+		$sql .= $this->unidad ? ", unidad = '" . $this->unidad . "'" : '';
+		$sql .= " WHERE fk_product = " . $this->fk_product;
+
+		dol_syslog(get_class($this) . "::update", LOG_DEBUG);
+
+		$result = $this->db->query($sql);
+		if (!$error) {
+			$this->db->commit();
+			return $result;
+		} else {
+			$this->db->rollback();
+			return -$error;
+		}
 	}
 
 	public function deleteFiscal()
 	{
+		$this->fk_product = $this->id;
+		$sql = "DELETE FROM " . MAIN_DB_PREFIX . "cfdiutils_product where fk_product =" . $this->fk_product;
+		$result = $this->db->query($sql);
+		return $result;
 	}
 
 	public function getFiscal()
 	{
 		$sql = "SELECT umed, claveprodserv, objetoimp, unidad FROM " . MAIN_DB_PREFIX . "cfdiutils_product WHERE fk_product = " . $this->id;
+
 		$resql = $this->db->query($sql);
 		$num_rows = $this->db->num_rows($resql);
 
@@ -143,11 +214,11 @@ class Cfdiproduct extends Product
 			$datatable = [];
 			$obj = $this->db->fetch_object($result);
 			if ($obj->nb > 0) {
-				$sql = "SELECT code, label FROM " . MAIN_DB_PREFIX . "c_cfdiutils_" . $table ." WHERE active = 1";
+				$sql = "SELECT code, label FROM " . MAIN_DB_PREFIX . "c_cfdiutils_" . $table . " WHERE active = 1";
 				$resql = $this->db->query($sql);
 				$num = $this->db->num_rows($resql);
 				$i = 0;
-				while($i < $num){
+				while ($i < $num) {
 					$obj = $this->db->fetch_object($resql);
 					$datatable[$obj->code] = $obj->label;
 					$i++;

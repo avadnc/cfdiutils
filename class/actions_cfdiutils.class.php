@@ -22,7 +22,8 @@
  *
  * Put detailed description here.
  */
-
+require_once 'cfdiproduct.class.php';
+require_once 'cfdisociete.class.php';
 /**
  * Class ActionsCfdiutils
  */
@@ -103,30 +104,106 @@ class ActionsCfdiutils
 		if (in_array($parameters['currentcontext'], ['productcard'])) {
 
 
-			// if($object->id != null){
-			// 	include 'cfdiproduct.class.php';
-			// 	$fiscalProd = new Cfdiproduct($db);
-			// 	$fiscalProd->fetch($object->id);
-			// 	$fiscalProd->claveprodserv = "01010101";
-			// 	$fiscalProd->objetoimp = "02";
-			// 	$fiscalProd->unidad = "pieza";
-			// 	$fiscalProd->umed = "H87";
-			// 	$result = $fiscalProd->createFiscal();
+			$cfdiproduct = new Cfdiproduct($db);
+			$cfdiproduct->fetch($object->id);
+			$cfdiproduct->getFiscal();
 
-			// 	if ($result == "InsertSuccess"){
+			if ($action == "confirm_valid") {
 
-			// 	echo '<pre>';var_dump($fiscalProd);exit;
-			// 	} else {
-			// 		var_dump($result);exit;
-			// 	}
-			// }
+				$umed = GETPOST('umed', 'alpha');
+				$claveprodserv = GETPOST('claveprodserv', 'alpha');
+				$objetoimp = GETPOST('objetoimp', 'alpha');
+
+				if (
+					$cfdiproduct->umed == null ||
+					$cfdiproduct->claveprodserv == null ||
+					$cfdiproduct->objetoimp == null
+				) {
+					$cfdiproduct->objetoimp = $objetoimp;
+					$cfdiproduct->claveprodserv = $claveprodserv;
+					$cfdiproduct->umed = $umed;
+					$result = $cfdiproduct->createFiscal();
+					if ($result == "InsertSuccess") {
+						setEventMessage('Datos Fiscales Añadidos', 'mesgs');
+						header('Location: ' . $_SERVER["PHP_SELF"] . '?id=' . $object->id);
+						exit;
+					} else {
+						setEventMessage('Error al añadir datos', 'errors');
+						header('Location: ' . $_SERVER["PHP_SELF"] . '?id=' . $object->id);
+						exit;
+					}
+				} else {
+
+					$cfdiproduct->objetoimp = $objetoimp;
+					$cfdiproduct->claveprodserv = $claveprodserv;
+					$cfdiproduct->umed = $umed;
+					$result = $cfdiproduct->updateFiscal();
+					if ($result == 1) {
+						setEventMessage('Datos Fiscales Actualizados', 'mesgs');
+						header('Location: ' . $_SERVER["PHP_SELF"] . '?id=' . $object->id);
+						exit;
+					} else {
+						setEventMessage('Error al actualizar datos', 'errors');
+						header('Location: ' . $_SERVER["PHP_SELF"] . '?id=' . $object->id);
+						exit;
+					}
+				}
+			}
+
+			if ($action == "confirm_delete") {
+				$cfdiproduct->deleteFiscal();
+			}
 		}
 
 
 		/* print_r($parameters); print_r($object); echo "action: " . $action; */
-		if (in_array($parameters['currentcontext'], array('somecontext1', 'somecontext2'))) {	    // do something only for the context 'somecontext1' or 'somecontext2'
-			// Do what you want here...
-			// You can for example call global vars like $fieldstosearchall to overwrite them, or update database depending on $action and $_POST values.
+		if (in_array($parameters['currentcontext'], ['thirdpartycomm', 'thirdpartycard'])) {
+
+			$societe = new Cfdisociete($db);
+			$societe->fetch($object->id);
+			$societe->getFiscal();
+
+			if ($action == "confirm_valid") {
+				$fiscal_name = GETPOST('fiscal_name');
+				$zip = GETPOST('cp', 'int');
+				$rfc = GETPOST('rfc', 'alpha');
+				$regimen = GETPOST('regimen', 'int');
+
+				if (
+					$societe->fiscal_name == null ||
+					$societe->zip == null ||
+					$societe->idprof1 == null ||
+					$societe->forme_juridique_code == null
+				) {
+
+					$societe->fiscal_name = $fiscal_name;
+					$societe->zip = $zip;
+					$societe->idprof1 = $rfc;
+					$societe->forme_juridique_code = $regimen;
+					$result = $societe->createFiscal();
+				} else {
+					$societe->fiscal_name = $fiscal_name;
+					$societe->zip = $zip;
+					$societe->idprof1 = $rfc;
+					$societe->forme_juridique_code = $regimen;
+					$result = $societe->updateFiscal();
+				}
+
+				if ($result == "InsertSuccess" || $result == 1) {
+					$societe->update($object->id, $user, 0);
+					setEventMessage('Datos Fiscales Actualizados', 'mesgs');
+					header('Location: ' . $_SERVER["PHP_SELF"] . '?id=' . $object->id);
+					exit;
+				} else {
+					setEventMessage('Error al actualizar datos', 'errors');
+					header('Location: ' . $_SERVER["PHP_SELF"] . '?id=' . $object->id);
+					exit;
+				}
+			}
+
+			if ($action == "confirm_delete") {
+				$societe->deleteFiscal();
+			}
 		}
 
 		if (!$error) {
@@ -389,29 +466,54 @@ class ActionsCfdiutils
 		$form = new Form($db);
 
 		if (in_array($parameters['currentcontext'], ['productcard'])) {
-
-			if ($object->array_options['options_fiscal'] == 1) {
-				include 'cfdiproduct.class.php';
+			if ($action != "create") {
 				$cfdiproduct = new Cfdiproduct($db);
-				$cfdiproduct->fetch(3);
-
+				$cfdiproduct->fetch($object->id);
+				$cfdiproduct->getFiscal();
 				if (
 					$cfdiproduct->umed == null ||
 					$cfdiproduct->claveprodserv == null ||
-					$cfdiproduct->objetoimp == null ||
-					$cfdiproduct->unidad == null
+					$cfdiproduct->objetoimp == null
 				) {
 					echo '<tr><td>Datos Fiscales</td>';
 					echo '<td><a class="butAction" href="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&action=addfiscal">Añadir</a></td></tr>';
 				} else {
-					echo '<tr><td>Datos Fiscales</td>';
-					echo '<td><a class="butAction" href="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&action=modifyfiscal">Añadir</a></td></tr>';
+					echo '<tr><td align="left">Datos Fiscales</td>';
+					echo '<td><table class="border centpercent">';
+					echo '<tr><td colspan="2" align="center"><h3>SAT</h3></td></tr>';
+					echo '<tr><td><strong>UMED</strong></td><td>' . $cfdiproduct->umed . '</td></tr>';
+					echo '<tr><td><strong>ClaveProdServ</strong></td><td>' . $cfdiproduct->claveprodserv . '</td></tr>';
+					echo '<tr><td><strong>Objeto de Impuesto</strong></td><td>' . $cfdiproduct->objetoimp . '</td></tr>';
+					echo '<tr><td colspan="2" align="center"><a class="butAction" href="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&action=modifyfiscal">Modificar</a></td></tr>';
+					echo '</table></td></tr>';
 				}
 
 				if ($action == "addfiscal") {
+
 					$umed = $cfdiproduct->getDictionary('umed');
 					$claveprodserv = $cfdiproduct->getDictionary('claveprodserv');
-					var_dump($claveprodserv);
+					$objetoimp = $cfdiproduct->getDictionary('objetoimp');
+
+					$formquestion = array(
+
+						'text' => '<h2>' . $langs->trans("dataFiscal") . '</h2>',
+						['type' => 'select', 'name' => 'umed', 'id' => 'umed', 'label' => 'Unidad de Medida', 'values' => $umed],
+						['type' => 'select', 'name' => 'claveprodserv', 'id' => 'claveprodserv', 'label' => 'ClaveProdServ', 'values' => $claveprodserv],
+						['type' => 'select', 'name' => 'objetoimp', 'id' => 'objetoimp', 'label' => 'Objeto de Impuesto', 'values' => $objetoimp],
+						['other' => '<a href="#">asd</a>']
+
+					);
+					$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"] . '?id=' . $object->id, $langs->trans('selectProductFiscal'), '', 'confirm_valid', $formquestion, 0, 1, 300, 600);
+					print $formconfirm;
+
+					echo '<script>$(document).ready(function(){
+						$(".select2-container").css("width","20rem");
+					});</script>';
+				}
+
+				if ($action == "modifyfiscal") {
+					$umed = $cfdiproduct->getDictionary('umed');
+					$claveprodserv = $cfdiproduct->getDictionary('claveprodserv');
 					$objetoimp = [
 						"01" => "01 - No objeto de impuesto.",
 						"02" => "02 - Sí objeto de impuesto.",
@@ -420,13 +522,13 @@ class ActionsCfdiutils
 
 					$formquestion = array(
 
-						'text' => '<h2>' . $langs->trans("selectProductFiscal") . '</h2>',
-						['type' => 'select', 'name' => 'umed', 'id' => 'umed', 'label' => 'Unidad de Medida', 'values' => $umed],
-						['type' => 'select', 'name' => 'claveprodserv', 'id' => 'claveprodserv', 'label' => 'ClaveProdServ', 'values' => $claveprodserv],
-						['type' => 'select', 'name' => 'objetoimp', 'id' => 'objetoimp', 'label' => 'Objeto de Impuesto', 'values' => $objetoimp],
+						'text' => '<h2>' . $langs->trans("dataFiscal") . '</h2>',
+						['type' => 'select', 'name' => 'umed', 'id' => 'umed', 'label' => 'Unidad de Medida', 'values' => $umed, 'default' => $cfdiproduct->umed],
+						['type' => 'select', 'name' => 'claveprodserv', 'id' => 'claveprodserv', 'label' => 'ClaveProdServ', 'values' => $claveprodserv, 'default' => $cfdiproduct->claveprodserv],
+						['type' => 'select', 'name' => 'objetoimp', 'id' => 'objetoimp', 'label' => 'Objeto de Impuesto', 'values' => $objetoimp, 'default' => $cfdiproduct->objetoimp],
 
 					);
-					$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"] . '?id=' . $object->id, $langs->trans('selectProductFiscal'), $text, 'confirm_valid', $formquestion, 0, 1, 300, 600);
+					$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"] . '?id=' . $object->id, $langs->trans('selectProductFiscal'), '', 'confirm_valid', $formquestion, 0, 1, 300, 600);
 					print $formconfirm;
 
 					echo '<script>$(document).ready(function(){
@@ -438,6 +540,77 @@ class ActionsCfdiutils
 
 		if (in_array($parameters['currentcontext'], ['paymentcard', 'paiementcard'])) {
 			echo '<tr><td>Hola</td><td>Caracola</td></tr>';
+		}
+
+		if (in_array($parameters['currentcontext'], ['thirdpartycomm', 'thirdpartycard'])) {
+
+			// Validate if object is customer
+			if ($object->client == 1) {
+
+				$societe = new Cfdisociete($db);
+				$societe->fetch($object->id);
+				$societe->getFiscal();
+				if (
+					$societe->fiscal_name == null ||
+					$societe->zip == null ||
+					$societe->idprof1 == null ||
+					$societe->forme_juridique_code == null
+				) {
+					echo '<tr><td>Cédula Fiscal</td><td><a class="butAction" href="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&action=addfiscal">Añadir</a></td></tr>';
+				} else {
+
+					echo '<tr><td class="left">Nombre Fiscal SAT<a class="editfielda" href="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&action=modifyfiscal">' . img_edit($langs->transnoentitiesnoconv('Edit'), 1) . '</a></td>';
+					echo '<td class="left"><span class="fas fa-building" style=" color: #6c6aa8;padding-right:0.5rem;"></span>' . $societe->fiscal_name . '</td></tr>';
+				}
+
+				if ($action == "addfiscal") {
+
+					$regimen = $societe->getFormeJuridique();
+
+					//TODO: Add Municipio, CODE Municipio..... etc...
+					$formquestion = array(
+
+						'text' => '<h2>' . $langs->trans("dataFiscal") . '</h2>',
+						['type' => 'text', 'name' => 'fiscal_name', 'id' => 'fiscal_name', 'label' => 'Nombre Fiscal SAT', 'value' => strtoupper($societe->name), 'tdclass' => 'fieldrequired'],
+						['type' => 'text', 'name' => 'rfc', 'id' => 'rfc', 'label' => 'RFC', 'value' => strtoupper($societe->idprof1), 'tdclass' => 'fieldrequired'],
+						['type' => 'text', 'name' => 'cp', 'id' => 'cp', 'label' => 'Código Postal', 'value' => $societe->zip, 'tdclass' => 'fieldrequired'],
+						['type' => 'select', 'name' => 'regimen', 'id' => 'regimen', 'label' => 'Régimen Fiscal', 'values' => $regimen, 'default' => $societe->forme_juridique_code, 'tdclass' => 'fieldrequired'],
+
+
+					);
+
+					$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"] . '?id=' . $object->id, $langs->trans('selectProductFiscal'), '', 'confirm_valid', $formquestion, 0, 1, 380, 640);
+					print $formconfirm;
+
+					echo '<script>$(document).ready(function(){
+						$(".flat").css("width","20rem");
+					});</script>';
+				}
+
+				if ($action == "modifyfiscal") {
+
+					$regimen = $societe->getFormeJuridique();
+
+					//TODO: Add Municipio, CODE Municipio..... etc...
+					$formquestion = array(
+
+						'text' => '<h2>' . $langs->trans("dataFiscal") . '</h2>',
+						['type' => 'text', 'name' => 'fiscal_name', 'id' => 'fiscal_name', 'label' => 'Nombre Fiscal SAT', 'value' => $societe->fiscal_name, 'tdclass' => 'fieldrequired'],
+						['type' => 'text', 'name' => 'rfc', 'id' => 'rfc', 'label' => 'RFC', 'value' => strtoupper($societe->idprof1), 'tdclass' => 'fieldrequired'],
+						['type' => 'text', 'name' => 'cp', 'id' => 'cp', 'label' => 'Código Postal', 'value' => $societe->zip, 'tdclass' => 'fieldrequired'],
+						['type' => 'select', 'name' => 'regimen', 'id' => 'regimen', 'label' => 'Régimen Fiscal', 'values' => $regimen, 'default' => $societe->forme_juridique_code, 'tdclass' => 'fieldrequired'],
+
+
+					);
+
+					$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"] . '?id=' . $object->id, $langs->trans('selectProductFiscal'), '', 'confirm_valid', $formquestion, 0, 1, 380, 640);
+					print $formconfirm;
+
+					echo '<script>$(document).ready(function(){
+						$(".flat").css("width","20rem");
+					});</script>';
+				}
+			}
 		}
 	}
 
@@ -459,7 +632,11 @@ class ActionsCfdiutils
 
 	public function addMoreActionsButtons(&$parameters, &$object, &$action)
 	{
-
+		// if (in_array($parameters['currentcontext'], ['globalcard'])) {
+		// 	echo '<pre>';
+		// 	var_dump($object);
+		// 	exit;
+		// }
 		// print '<button class="butAction">Pago CFDI</button>';
 	}
 }

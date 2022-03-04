@@ -117,7 +117,11 @@ class modCfdiutils extends DolibarrModules
 			'hooks' => array(
 				'productcard',
 				'paymentcard', // !ficha pago realizado
-				'paiementcard' // !ficha cuando se realiza el pago
+				'paiementcard', // !ficha cuando se realiza el pago
+				'thirdpartycomm',
+				'thirdpartycard',
+				'paymentcard',
+				'paiementcard'
 				//   'data' => array(
 				//       'hookcontext1',
 				//       'hookcontext2',
@@ -215,13 +219,15 @@ class modCfdiutils extends DolibarrModules
 				MAIN_DB_PREFIX . 'c_cfdiutils_usocfdi',				//CFDI - Uso del CFDI
 				MAIN_DB_PREFIX . 'c_cfdiutils_metodopago',			//CFDI - Método de pago
 				MAIN_DB_PREFIX . 'c_cfdiutils_tiporelacion',		//CFDI - Tipo de relación
+				MAIN_DB_PREFIX . 'c_cfdiutils_objetoimp',			//CFDI - Objeto de Impuesto
 			],
 			'tablib' => [
 				'CFDI - Unidad de medida',					//CFDI - Unidad de medida
 				'CFDI - Claves de producto y/o servicio',	//CFDI - Claves de producto y/o servicio
 				'CFDI - Uso del CFDI',						//CFDI - Uso del CFDI
 				'CFDI - Método de Pago',					//CFDI - Método de pago
-				'CFDI - Tipo de relación'					//CFDI - Tipo de relación
+				'CFDI - Tipo de relación',					//CFDI - Tipo de relación
+				'CFDI - Objeto de Impuesto',				//CFDI - Objeto de Impuesto
 			],
 			'tabsql' => [
 				'SELECT f.rowid as rowid, f.code, f.label, f.active FROM ' . MAIN_DB_PREFIX . 'c_cfdiutils_umed as f', 				//CFDI - Unidad de medida
@@ -229,6 +235,7 @@ class modCfdiutils extends DolibarrModules
 				'SELECT f.rowid as rowid, f.code, f.label, f.active FROM ' . MAIN_DB_PREFIX . 'c_cfdiutils_usocfdi as f', 			//CFDI - Uso del CFDI
 				'SELECT f.rowid as rowid, f.code, f.label, f.active FROM ' . MAIN_DB_PREFIX . 'c_cfdiutils_metodopago as f', 		//CFDI - Método de pago
 				'SELECT f.rowid as rowid, f.code, f.label, f.active FROM ' . MAIN_DB_PREFIX . 'c_cfdiutils_tiporelacion as f',		//CFDI - Tipo de relación
+				'SELECT f.rowid as rowid, f.code, f.label, f.active FROM ' . MAIN_DB_PREFIX . 'c_cfdiutils_objetoimp as f',			//CFDI - Objeto de Impuesto
 			],
 			'tabsqlsort' => [
 				"label ASC", 	//CFDI - Unidad de medida
@@ -236,6 +243,7 @@ class modCfdiutils extends DolibarrModules
 				"label ASC",	//CFDI - Uso del CFDI
 				"label ASC",	//CFDI - Método de pago
 				"label ASC",	//CFDI - Tipo de relación
+				"label ASC", 	//CFDI - Objeto de Impuesto
 			],
 			'tabfield' => [
 				"code,label",	//CFDI - Unidad de medida
@@ -243,6 +251,7 @@ class modCfdiutils extends DolibarrModules
 				"code,label",	//CFDI - Uso del CFDI
 				"code,label",	//CFDI - Método de pago
 				"code,label",	//CFDI - Tipo de relación
+				"code,label", 	//CFDI - Objeto de Impuesto
 			],
 			'tabfieldvalue' => [
 				"code,label", //CFDI - Unidad de medida
@@ -250,6 +259,7 @@ class modCfdiutils extends DolibarrModules
 				"code,label", //CFDI - Uso del CFDI
 				"code,label", //CFDI - Método de pago
 				"code,label", //CFDI - Tipo de relación
+					"code,label", 	//CFDI - Objeto de Impuesto
 			],
 			'tabfieldinsert' => [
 				"code,label",	//CFDI - Unidad de medida
@@ -257,6 +267,7 @@ class modCfdiutils extends DolibarrModules
 				"code,label",	//CFDI - Uso del CFDI
 				"code,label",	//CFDI - Método de pago
 				"code,label",	//CFDI - Tipo de relación
+					"code,label", 	//CFDI - Objeto de Impuesto
 			],
 			'tabrowid' => [
 				"rowid", //CFDI - Unidad de medida
@@ -264,6 +275,7 @@ class modCfdiutils extends DolibarrModules
 				"rowid", //CFDI - Uso del CFDI
 				"rowid", //CFDI - Método de pago
 				"rowid", //CFDI - Tipo de relación
+					"rowid", 	//CFDI - Objeto de Impuesto
 			],
 			'tabcond' => [
 				$conf->cfdiutils->enabled, //CFDI - Unidad de medida
@@ -271,6 +283,7 @@ class modCfdiutils extends DolibarrModules
 				$conf->cfdiutils->enabled, //CFDI - Uso del CFDI
 				$conf->cfdiutils->enabled, //CFDI - Método de pago
 				$conf->cfdiutils->enabled, //CFDI - Tipo de relación
+				$conf->cfdiutils->enabled, //CFDI - Objeto de Impuesto
 			]
 		];
 		/* Example:
@@ -420,46 +433,46 @@ class modCfdiutils extends DolibarrModules
 		);
 		*/
 
-        // $this->menu[$r++]=array(
-        //     // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
-        //     'fk_menu'=>'fk_mainmenu=cfdiutils',
-        //     // This is a Left menu entry
-        //     'type'=>'left',
-        //     'titre'=>'List Facture',
-        //     'mainmenu'=>'cfdiutils',
-        //     'leftmenu'=>'cfdiutils_facture',
-        //     'url'=>'/cfdiutils/facture_list.php',
-        //     // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
-        //     'langs'=>'cfdiutils@cfdiutils',
-        //     'position'=>1100+$r,
-        //     // Define condition to show or hide menu entry. Use '$conf->cfdiutils->enabled' if entry must be visible if module is enabled. Use '$leftmenu==\'system\'' to show if leftmenu system is selected.
-        //     'enabled'=>'$conf->cfdiutils->enabled',
-        //     // Use 'perms'=>'$user->rights->cfdiutils->level1->level2' if you want your menu with a permission rules
-        //     'perms'=>'1',
-        //     'target'=>'',
-        //     // 0=Menu for internal users, 1=external users, 2=both
-        //     'user'=>2,
-        // );
-        // $this->menu[$r++]=array(
-        //     // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
-        //     'fk_menu'=>'fk_mainmenu=cfdiutils,fk_leftmenu=cfdiutils_facture',
-        //     // This is a Left menu entry
-        //     'type'=>'left',
-        //     'titre'=>'New Facture',
-        //     'mainmenu'=>'cfdiutils',
-        //     'leftmenu'=>'cfdiutils_facture',
-        //     'url'=>'/cfdiutils/facture_card.php?action=create',
-        //     // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
-        //     'langs'=>'cfdiutils@cfdiutils',
-        //     'position'=>1100+$r,
-        //     // Define condition to show or hide menu entry. Use '$conf->cfdiutils->enabled' if entry must be visible if module is enabled. Use '$leftmenu==\'system\'' to show if leftmenu system is selected.
-        //     'enabled'=>'$conf->cfdiutils->enabled',
-        //     // Use 'perms'=>'$user->rights->cfdiutils->level1->level2' if you want your menu with a permission rules
-        //     'perms'=>'1',
-        //     'target'=>'',
-        //     // 0=Menu for internal users, 1=external users, 2=both
-        //     'user'=>2
-        // );
+		// $this->menu[$r++]=array(
+		//     // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+		//     'fk_menu'=>'fk_mainmenu=cfdiutils',
+		//     // This is a Left menu entry
+		//     'type'=>'left',
+		//     'titre'=>'List Facture',
+		//     'mainmenu'=>'cfdiutils',
+		//     'leftmenu'=>'cfdiutils_facture',
+		//     'url'=>'/cfdiutils/facture_list.php',
+		//     // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+		//     'langs'=>'cfdiutils@cfdiutils',
+		//     'position'=>1100+$r,
+		//     // Define condition to show or hide menu entry. Use '$conf->cfdiutils->enabled' if entry must be visible if module is enabled. Use '$leftmenu==\'system\'' to show if leftmenu system is selected.
+		//     'enabled'=>'$conf->cfdiutils->enabled',
+		//     // Use 'perms'=>'$user->rights->cfdiutils->level1->level2' if you want your menu with a permission rules
+		//     'perms'=>'1',
+		//     'target'=>'',
+		//     // 0=Menu for internal users, 1=external users, 2=both
+		//     'user'=>2,
+		// );
+		// $this->menu[$r++]=array(
+		//     // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+		//     'fk_menu'=>'fk_mainmenu=cfdiutils,fk_leftmenu=cfdiutils_facture',
+		//     // This is a Left menu entry
+		//     'type'=>'left',
+		//     'titre'=>'New Facture',
+		//     'mainmenu'=>'cfdiutils',
+		//     'leftmenu'=>'cfdiutils_facture',
+		//     'url'=>'/cfdiutils/facture_card.php?action=create',
+		//     // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+		//     'langs'=>'cfdiutils@cfdiutils',
+		//     'position'=>1100+$r,
+		//     // Define condition to show or hide menu entry. Use '$conf->cfdiutils->enabled' if entry must be visible if module is enabled. Use '$leftmenu==\'system\'' to show if leftmenu system is selected.
+		//     'enabled'=>'$conf->cfdiutils->enabled',
+		//     // Use 'perms'=>'$user->rights->cfdiutils->level1->level2' if you want your menu with a permission rules
+		//     'perms'=>'1',
+		//     'target'=>'',
+		//     // 0=Menu for internal users, 1=external users, 2=both
+		//     'user'=>2
+		// );
 
 		/* END MODULEBUILDER LEFTMENU FACTURE */
 		// Exports profiles provided by this module
@@ -496,21 +509,21 @@ class modCfdiutils extends DolibarrModules
 		// Imports profiles provided by this module
 		$r = 1;
 		/* BEGIN MODULEBUILDER IMPORT FACTURE */
-		/*
+
 		 $langs->load("cfdiutils@cfdiutils");
 		 $this->export_code[$r]=$this->rights_class.'_'.$r;
-		 $this->export_label[$r]='FactureLines';	// Translation key (used only if key ExportDataset_xxx_z not found)
-		 $this->export_icon[$r]='facture@cfdiutils';
-		 $keyforclass = 'Facture'; $keyforclassfile='/cfdiutils/class/facture.class.php'; $keyforelement='facture@cfdiutils';
+		 $this->export_label[$r]= 'CfdiproductImport';	// Translation key (used only if key ExportDataset_xxx_z not found)
+		 $this->export_icon[$r]= 'cfdiproduct@cfdiutils';
+		 $keyforclass = 'Cfdiproduct'; $keyforclassfile='/cfdiutils/class/cfdiproduct.class.php'; $keyforelement= 'cfdiproduct@cfdiutils';
 		 include DOL_DOCUMENT_ROOT.'/core/commonfieldsinexport.inc.php';
-		 $keyforselect='facture'; $keyforaliasextra='extra'; $keyforelement='facture@cfdiutils';
-		 include DOL_DOCUMENT_ROOT.'/core/extrafieldsinexport.inc.php';
-		 //$this->export_dependencies_array[$r]=array('mysubobject'=>'ts.rowid', 't.myfield'=>array('t.myfield2','t.myfield3')); // To force to activate one or several fields if we select some fields that need same (like to select a unique key if we ask a field of a child to avoid the DISTINCT to discard them, or for computed field than need several other fields)
+		 $keyforselect= 'cfdiproduct'; $keyforaliasextra='extra'; $keyforelement= 'cfdiproduct@cfdiutils';
+				//  include DOL_DOCUMENT_ROOT.'/core/extrafieldsinexport.inc.php';
+		//  $this->export_dependencies_array[$r]=array(''=>'ts.rowid', 't.myfield'=>array('t.myfield2','t.myfield3')); // To force to activate one or several fields if we select some fields that need same (like to select a unique key if we ask a field of a child to avoid the DISTINCT to discard them, or for computed field than need several other fields)
 		 $this->export_sql_start[$r]='SELECT DISTINCT ';
 		 $this->export_sql_end[$r]  =' FROM '.MAIN_DB_PREFIX.'facture as t';
 		 $this->export_sql_end[$r] .=' WHERE 1 = 1';
 		 $this->export_sql_end[$r] .=' AND t.entity IN ('.getEntity('facture').')';
-		 $r++; */
+		 $r++;
 		/* END MODULEBUILDER IMPORT FACTURE */
 	}
 
@@ -534,22 +547,56 @@ class modCfdiutils extends DolibarrModules
 		// Create extrafields during init
 		include_once DOL_DOCUMENT_ROOT . '/core/class/extrafields.class.php';
 		$extrafields = new ExtraFields($this->db);
-		// $result1 = $extrafields->addExtraField('umed', 'Unidad de Medida', 'sellist', 1, 10, 'product', 0, 1, '', ['options' => ['c_cfdiutils_umed:label:code::active:1' => NULL]]);
-		// $result2 = $extrafields->addExtraField('claveprodserv', 'Clave Producto o Servicio', 'sellist', 1, 10, 'product', 0, 1, '', ['options' => ['c_cfdiutils_claveprodserv:label:code::active:1' => NULL]]);
-		// $result3 = $extrafields->addExtraField('metodopago', 'Método de pago CFDI', 'sellist', 1, 10, 'facture', 0, 1, '', ['options' => ['c_cfdiutils_metodopago:label:code::active:1' => NULL]]);
-		// $result4 = $extrafields->addExtraField('usocfdi', 'Uso del CFDI', 'sellist', 10, 10, 'facture', 0, 1, '', ['options' => ['c_cfdiutils_usocfdi:label:code::active:1' => NULL]]);
-		// $result5 = $extrafields->addExtraField('tiporelacion', 'Tipo de relación Doc. CFDI', 'sellist', 10, 10, 'facture', 0, 1, '', ['options' => ['c_cfdiutils_tiporelacion:label:code::active:1' => NULL]]);
-
-		//$result1=$extrafields->addExtraField('cfdiutils_myattr1', "New Attr 1 label", 'boolean', 1,  3, 'thirdparty',   0, 0, '', '', 1, '', 0, 0, '', '', 'cfdiutils@cfdiutils', '$conf->cfdiutils->enabled');
-		//$result2=$extrafields->addExtraField('cfdiutils_myattr2', "New Attr 2 label", 'varchar', 1, 10, 'project',      0, 0, '', '', 1, '', 0, 0, '', '', 'cfdiutils@cfdiutils', '$conf->cfdiutils->enabled');
-		//$result3=$extrafields->addExtraField('cfdiutils_myattr3', "New Attr 3 label", 'varchar', 1, 10, 'bank_account', 0, 0, '', '', 1, '', 0, 0, '', '', 'cfdiutils@cfdiutils', '$conf->cfdiutils->enabled');
-		//$result4=$extrafields->addExtraField('cfdiutils_myattr4', "New Attr 4 label", 'select',  1,  3, 'thirdparty',   0, 1, '', array('options'=>array('code1'=>'Val1','code2'=>'Val2','code3'=>'Val3')), 1,'', 0, 0, '', '', 'cfdiutils@cfdiutils', '$conf->cfdiutils->enabled');
-		//$result5=$extrafields->addExtraField('cfdiutils_myattr5', "New Attr 5 label", 'text',    1, 10, 'user',         0, 0, '', '', 1, '', 0, 0, '', '', 'cfdiutils@cfdiutils', '$conf->cfdiutils->enabled');
 
 		// Permissions
 		$this->remove($options);
 
 		$sql = array();
+		$regimen = [
+
+			"601" => "General de Ley Personas Morales",
+			"603" => "Personas Morales con Fines no Lucrativos",
+			"605" => "Sueldos y Salarios e Ingresos Asimilados a Salarios",
+			"606" => "Arrendamiento",
+			"607" => "Régimen de Enajenación o Adquisición de Bienes",
+			"608" => "Demás ingresos",
+			"610" => "Residentes en el Extranjero sin Establecimiento Permanente en México",
+			"611" => "Ingresos por Dividendos (socios y accionistas)",
+			"612" => "Personas Físicas con Actividades Empresariales y Profesionales",
+			"614" => "Ingresos por intereses",
+			"615" => "Régimen de los ingresos por obtención de premios",
+			"616" => "Sin obligaciones fiscales",
+			"620" => "Sociedades Cooperativas de Producción que optan por diferir sus ingresos",
+			"621" => "Incorporación Fiscal",
+			"622" => "Actividades Agrícolas, Ganaderas, Silvícolas y Pesqueras",
+			"623" => "Opcional para Grupos de Sociedades",
+			"624" => "Coordinados",
+			"625" => "Régimen de las Actividades Empresariales con ingresos a través de Plataformas Tecnológicas",
+			"626" => "Régimen Simplificado de Confianza",
+		];
+
+		foreach($regimen as $cod => $val){
+			$sqlreg = "SELECT count(*) as nb from ".MAIN_DB_PREFIX. "c_forme_juridique where code = ". $cod;
+			$result = $this->db->query($sqlreg);
+            if ($result) {
+                $obj = $this->db->fetch_object($result);
+                if ($obj->nb == 0) {
+                $sqlreg = "INSERT INTO " . MAIN_DB_PREFIX . "c_forme_juridique ";
+				$sqlreg .= "(code,fk_pays,libelle,active)";
+				$sqlreg .= " VALUES (".$cod.",154,'".$val."',1)";
+
+				$this->db->query($sqlreg);
+
+				} else {
+					$sqlreg = "UPDATE " . MAIN_DB_PREFIX . "c_forme_juridique ";
+					$sqlreg .= "SET fk_pays = 154, ";
+					$sqlreg .= " libelle = '".$val."' where code = ".$cod;
+
+					$this->db->query($sqlreg);
+				}
+            }
+
+		}
 
 		// Document templates
 		// $moduledir = 'cfdiutils';

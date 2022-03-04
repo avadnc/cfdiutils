@@ -1,24 +1,24 @@
 <?php return array (
   'root' => 
   array (
-    'pretty_version' => '14.0.x-dev',
-    'version' => '14.0.9999999.9999999-dev',
+    'pretty_version' => 'dev-master',
+    'version' => 'dev-master',
     'aliases' => 
     array (
     ),
-    'reference' => '04c42731f756433c086b845fa361f0e463d25f23',
+    'reference' => '40672a8e065a0d86ab2e8496e1ed8bca2382a17a',
     'name' => '__root__',
   ),
   'versions' => 
   array (
     '__root__' => 
     array (
-      'pretty_version' => '14.0.x-dev',
-      'version' => '14.0.9999999.9999999-dev',
+      'pretty_version' => 'dev-master',
+      'version' => 'dev-master',
       'aliases' => 
       array (
       ),
-      'reference' => '04c42731f756433c086b845fa361f0e463d25f23',
+      'reference' => '40672a8e065a0d86ab2e8496e1ed8bca2382a17a',
     ),
     'eclipxe/cfdiutils' => 
     array (
@@ -46,6 +46,15 @@
       array (
       ),
       'reference' => 'add283790d140e485b5f3dc14d2ce6c7d944277d',
+    ),
+    'stefangabos/world_countries' => 
+    array (
+      'pretty_version' => 'v2.4.0',
+      'version' => '2.4.0.0',
+      'aliases' => 
+      array (
+      ),
+      'reference' => '70190326141053e614aa20328fbdf2fdda695d75',
     ),
     'symfony/polyfill-php80' => 
     array (

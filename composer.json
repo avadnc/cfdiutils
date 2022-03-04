@@ -1,5 +1,6 @@
 {
     "require": {
-        "eclipxe/cfdiutils": "^2.19"
+        "eclipxe/cfdiutils": "^2.19",
+        "stefangabos/world_countries": "^2.4"
     }
 }
