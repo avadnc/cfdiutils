@@ -146,7 +146,7 @@ if ($action == "save") {
 			$db->free();
 		}
 
-		if ($passkey != null) {
+		if ($passkey > 0) {
 
 			$sql = "SELECT rowid from " . MAIN_DB_PREFIX . "cfdiutils_conf where type = 'PASSKEY' AND entity = " . $conf->entity;
 			$resql = $db->query($sql);

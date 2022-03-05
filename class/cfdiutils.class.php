@@ -1,4 +1,6 @@
 <?php
+
+
 /* Copyright (C) 2017  Laurent Destailleur <eldy@users.sourceforge.net>
  * Copyright (C) ---Put here your own copyright and developer email---
  *
@@ -22,16 +24,20 @@
  * \brief       This file is a XML class file for generate CFDI Facture
  */
 
-require '../vendor/autoload.php';
+require_once DOL_DOCUMENT_ROOT . '/custom/cfdiutils/vendor/autoload.php';
+use PhpCfdi\Credentials\PrivateKey;
 
 class Cfdiutils
 {
-
+	public $pac;
+	public $webservice_prod;
 
 	public function __construct(DoliDB $db)
 	{
 		global $conf;
 		$this->db = $db;
+		$this->pac = $conf->global->CFDIUTILS_PAC;
+		dol_include_once('/cfdiutils/pac/' . $this->pac . '/conf.php');
 	}
 
 	/**
@@ -39,28 +45,27 @@ class Cfdiutils
 	 *
 	 *	@param	int 	$id		ID Object facture
 	 */
-	public function xmlInvoice($id)
+	public function stampXML($header, $emisor, $receptor, $conceptos)
 	{
 		global $conf;
-
-		$invoice = new Facture($this->db);
-		$invoice->fetch($id);
-
 		//Get CSD
+		// $classname = ucfirst($this->pac);
+		// $pac = new $classname;
 
 		$sql = "SELECT type,value from " . MAIN_DB_PREFIX . "cfdiutils_conf where entity =" . $conf->entity;
 		$resql = $this->db->query($sql);
 		$num_rows = $this->db->num_rows($resql);
 		if ($num_rows > 0) {
 			$i = 0;
-			while($i < $num_rows){
+			while ($i < $num_rows) {
 				$obj = $this->db->fetch_object($resql);
 
-				if($obj->type == "CSD"){
+				if ($obj->type == "CSD") {
 					$csd = $obj->value;
 				}
 				if ($obj->type == "KEY") {
 					$key = $obj->value;
+
 				}
 				if ($obj->type == "PASSKEY") {
 					$passkey = $obj->value;
@@ -74,33 +79,30 @@ class Cfdiutils
 			return -1;
 		}
 
+
 		$certificado = new \CfdiUtils\Certificado\Certificado($csd);
-		$comprobanteAtributos = [
-			'Serie' => 'XXX',
-			'Folio' => '0000123456',
-			// y otros atributos más...
-		];
-		$creator = new \CfdiUtils\CfdiCreator40($comprobanteAtributos, $certificado);
+
+		$creator = new \CfdiUtils\CfdiCreator40($header, $certificado);
 
 		$comprobante = $creator->comprobante();
 
 		// No agrego (aunque puedo) el Rfc y Nombre porque uso los que están establecidos en el certificado
-		$comprobante->addEmisor([
-			'RegimenFiscal' => '601', // General de Ley Personas Morales
-		]);
+		$comprobante->addEmisor($emisor);
 
-		$comprobante->addReceptor([/* Atributos del receptor */]);
+		$comprobante->addReceptor($receptor);
 
-		$comprobante->addConcepto([
-			/* Atributos del concepto */])->addTraslado([
-			/* Atributos del impuesto trasladado */]);
+		$num = count($conceptos) - 1;
+		for ($i = 0; $i < $num; $i++) {
+			$comprobante->addConcepto($conceptos[$i])->addTraslado($conceptos['Traslado'][$i]);
+		}
 
 		// método de ayuda para establecer las sumas del comprobante e impuestos
 		// con base en la suma de los conceptos y la agrupación de sus impuestos
 		$creator->addSumasConceptos(null, 2);
-
+		$pemPrivateKeyContents = PrivateKey::convertDerToPem(file_get_contents('file://'.$key), $passkey !== '');
+		$creator->addSello($pemPrivateKeyContents, $passkey);
 		// método de ayuda para generar el sello (obtener la cadena de origen y firmar con la llave privada)
-		$creator->addSello($key,$passkey);
+
 
 		// método de ayuda para mover las declaraciones de espacios de nombre al nodo raíz
 		$creator->moveSatDefinitionsToComprobante();
@@ -110,6 +112,6 @@ class Cfdiutils
 		$asserts->hasErrors(); // contiene si hay o no errores
 
 		// método de ayuda para generar el xml y retornarlo como un string
-		$creator->asXml();
+		return $creator->asXml();
 	}
 }

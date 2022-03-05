@@ -6,7 +6,7 @@
     'aliases' => 
     array (
     ),
-    'reference' => '7d67967898a1b306598de552a4ff6796104ec702',
+    'reference' => 'a530ca6576675406921dc975b5fe4d0eb0beca48',
     'name' => '__root__',
   ),
   'versions' => 
@@ -18,7 +18,7 @@
       'aliases' => 
       array (
       ),
-      'reference' => '7d67967898a1b306598de552a4ff6796104ec702',
+      'reference' => 'a530ca6576675406921dc975b5fe4d0eb0beca48',
     ),
     'eclipxe/cfdiutils' => 
     array (
@@ -28,6 +28,15 @@
       array (
       ),
       'reference' => '12eb407c1d663a66c17793abed545da9a1ba4a75',
+    ),
+    'eclipxe/enum' => 
+    array (
+      'pretty_version' => 'v0.2.6',
+      'version' => '0.2.6.0',
+      'aliases' => 
+      array (
+      ),
+      'reference' => '860e2592c2c9bcfa522c62d9cf3f3559014f8d28',
     ),
     'eclipxe/xmlresourceretriever' => 
     array (
@@ -55,6 +64,15 @@
       array (
       ),
       'reference' => 'eb1af427a20d9bf0916eedcb6db1925c7a5f1305',
+    ),
+    'phpcfdi/credentials' => 
+    array (
+      'pretty_version' => 'v1.1.4',
+      'version' => '1.1.4.0',
+      'aliases' => 
+      array (
+      ),
+      'reference' => '28f4707c07add5b17e7831eb9b734440e0ea4db0',
     ),
     'stefangabos/world_countries' => 
     array (

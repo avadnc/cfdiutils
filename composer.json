@@ -2,6 +2,7 @@
     "require": {
         "eclipxe/cfdiutils": "^2.19",
         "stefangabos/world_countries": "^2.4",
-        "phpcfdi/cfdi-cleaner": "^1.2"
+        "phpcfdi/cfdi-cleaner": "^1.2",
+        "phpcfdi/credentials": "^1.1"
     }
 }

@@ -23,7 +23,12 @@ class ComposerStaticInit8b6c7f97a570f54ac7f610d27380b6aa
         ),
         'P' => 
         array (
+            'PhpCfdi\\Credentials\\' => 20,
             'PhpCfdi\\CfdiCleaner\\' => 20,
+        ),
+        'E' => 
+        array (
+            'Eclipxe\\Enum\\' => 13,
         ),
         'C' => 
         array (
@@ -48,9 +53,17 @@ class ComposerStaticInit8b6c7f97a570f54ac7f610d27380b6aa
         array (
             0 => __DIR__ . '/..' . '/symfony/process',
         ),
+        'PhpCfdi\\Credentials\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/phpcfdi/credentials/src',
+        ),
         'PhpCfdi\\CfdiCleaner\\' => 
         array (
             0 => __DIR__ . '/..' . '/phpcfdi/cfdi-cleaner/src',
+        ),
+        'Eclipxe\\Enum\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/eclipxe/enum/src',
         ),
         'CfdiUtils\\' => 
         array (

@@ -25,6 +25,7 @@
 require_once 'cfdiproduct.class.php';
 require_once 'cfdisociete.class.php';
 require_once 'cfdifacture.class.php';
+require_once 'cfdiutils.class.php';
 /**
  * Class ActionsCfdiutils
  */
@@ -96,7 +97,7 @@ class ActionsCfdiutils
 	 */
 	public function doActions($parameters, &$object, &$action, $hookmanager)
 	{
-		global $db, $conf, $user, $langs;
+		global $db, $conf, $user, $langs, $form;
 
 		$error = 0; // Error counter
 
@@ -212,6 +213,26 @@ class ActionsCfdiutils
 
 		if (in_array($parameters['currentcontext'], ['invoicecard'])) {
 
+
+			//TODO Add actions for free lines entry
+			// echo '<pre>';var_dump($object->lines[$idline]);exit;
+			// $claveprodserv = GETPOST('claveprodserv');
+			// $umed = GETPOST('umed');
+
+			// if($action == "addline")
+			// {
+			// 	if($claveprodserv > 0 && $umed > 0){
+			// 		echo "hay datos";
+			// 	}
+
+			// }
+
+			// if ($action == "editline")
+			// {
+			// 	if ($claveprodserv > 0 && $umed > 0) {
+			// 	}
+			// }
+
 			if ($action == "confirm_valid_stamp") {
 
 				if ($user->rights->cfdiutils->stamp) {
@@ -221,8 +242,10 @@ class ActionsCfdiutils
 					$forma_pago = GETPOST('forma_pago');
 					$metodo_pago = GETPOST('metodo_pago');
 					$exportacion = GETPOST('exportacion');
+					$usocfdi = GETPOST('usocfdi');
 
-					if ($condicion_pago < 0 || $forma_pago < 0 || $metodo_pago < 0 || $exportacion < 0) {
+
+					if ($condicion_pago < 0 || $forma_pago < 0 || $metodo_pago < 0 || $exportacion < 0 || $usocfdi < 0) {
 						setEventMessage('Faltan datos fiscales', 'errors');
 						header('Location: ' . $_SERVER["PHP_SELF"] . '?facid=' . $object->id);
 						exit;
@@ -243,20 +266,39 @@ class ActionsCfdiutils
 					$invoice->fetch($object->id);
 					$invoice->getStamp();
 
+
+
 					if (!$invoice->fecha_emision) {
 
 						$fecha_emision = date('Y-m-d H:i:s');
 						$fecha_emision = str_replace(" ", "T", $fecha_emision);
+						$invoice->usocfdi = $usocfdi;
 						$invoice->condicion_pago = $condicion_pago;
 						$invoice->forma_pago = $forma_pago;
 						$invoice->metodo_pago = $metodo_pago;
 						$invoice->exportacion = $exportacion;
 						$invoice->fecha_emision = $fecha_emision;
 
+
 						$result = $invoice->createStamp();
 						if ($result == "InsertSuccess") {
+
 							$header = $invoice->getHeader();
+							$emisor = $invoice->getEmisor();
+							$receptor =	$invoice->getReceptor();
+							$conceptos = $invoice->getLines();
+
+							$cfdiutils = new Cfdiutils($db);
+							$xml = $cfdiutils->stampXML($header,$emisor,$receptor,$conceptos);
+							$filename = dol_sanitizeFileName($object->ref);
+							$filedir = $conf->facture->multidir_output[$object->entity] . '/' . dol_sanitizeFileName($object->ref);
+							$file_xml = fopen($filedir . "/" . $filename . ".xml", "w");
+							fwrite($file_xml, utf8_encode($xml));
+							fclose($file_xml);
+							exit;
+
 						} else {
+
 							setEventMessage('Error al registrar los datos fiscales de la factura', 'errors');
 							header('Location: ' . $_SERVER["PHP_SELF"] . '?facid=' . $object->id);
 							exit;
@@ -564,7 +606,7 @@ class ActionsCfdiutils
 						['type' => 'select', 'name' => 'umed', 'id' => 'umed', 'label' => 'Unidad de Medida', 'values' => $umed],
 						['type' => 'select', 'name' => 'claveprodserv', 'id' => 'claveprodserv', 'label' => 'ClaveProdServ', 'values' => $claveprodserv],
 						['type' => 'select', 'name' => 'objetoimp', 'id' => 'objetoimp', 'label' => 'Objeto de Impuesto', 'values' => $objetoimp],
-						['other' => '<a href="#">asd</a>']
+
 
 					);
 					$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"] . '?id=' . $object->id, $langs->trans('selectProductFiscal'), '', 'confirm_valid', $formquestion, 0, 1, 300, 600);
@@ -685,6 +727,16 @@ class ActionsCfdiutils
 
 		//Actions for Invoices
 		if (in_array($parameters['currentcontext'], ['invoicecard'])) {
+
+			// $idline = count($object->lines) - 1;
+			// $formquestion = [
+			// 	['type' => 'onecolumn', 'value' => '<select><option>--Seleccionar Pedimento --</option><option value="0">123456</option></select><input type="text">']
+			// ];
+
+			// $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"] . '?id=' . $object->id, $langs->trans('selectProductFiscal'), '', 'confirm_valid', $formquestion, 0, 1, 300, 600);
+			// print $formconfirm;
+
+
 			$invoice = new Cfdifacture($db);
 			$payterm = new Paytype($db);
 			$invoice->fetch($object->id);
@@ -712,27 +764,26 @@ class ActionsCfdiutils
 
 							$condicion_pago = $payterm->getDictionary('payment_term', false, "PaymentConditionShort");
 							$forma_pago = $payterm->getDictionary('paiement', false, "PaymentType");
-
-
-
-
 							$metodo_pago = $invoice->getDictionary('_metodopago');
 							$exportacion = $invoice->getDictionary('_exportacion');
+							$usocfdi = $invoice->getDictionary('_usocfdi');
 
 
 							$formquestion = array(
 
 								'text' => '<h2>' . $langs->trans("dataFiscalCFDI") . '</h2>',
+								['type' => 'select', 'name' => 'usocfdi', 'id' => 'usocfdi', 'label' => 'Uso del CFDI', 'values' => $usocfdi, 'default' => $invoice->usocfdi ? $invoice->usocfdi : $invoice->usocfdi, 'tdclass' => 'fieldrequired', 'select_disabled' => $invoice->fecha_emision ? 1 : 0],
 								['type' => 'select', 'name' => 'condicion_pago', 'id' => 'condicion_pago', 'label' => 'Condiciones de pago', 'values' => $condicion_pago, 'default' => $object->cond_reglement_code ? $object->cond_reglement_code : $invoice->condicion_pago, 'tdclass' => 'fieldrequired', 'select_disabled' => $invoice->fecha_emision ? 1 : 0],
 								['type' => 'select', 'name' => 'forma_pago', 'id' => 'forma_pago', 'label' => 'Forma de pago', 'values' => $forma_pago, 'default' =>  $object->mode_reglement_code ? $object->mode_reglement_code : $invoice->forma_pago, 'tdclass' => 'fieldrequired', 'select_disabled' => $invoice->fecha_emision ? 1 : 0],
 								['type' => 'select', 'name' => 'metodo_pago', 'id' => 'metodo_pago', 'label' => 'Método de pago', 'values' => $metodo_pago, 'default' => $invoice->metodo_pago ? $invoice->metodo_pago : $invoice->metodo_pago, 'tdclass' => 'fieldrequired', 'select_disabled' => $invoice->fecha_emision ? 1 : 0],
 								['type' => 'select', 'name' => 'exportacion', 'id' => 'exportacion', 'label' => 'Exportación', 'values' => $exportacion, 'default' => $invoice->exportacion ? $invoice->exportacion : $invoice->exportacion, 'tdclass' => 'fieldrequired', 'select_disabled' => $invoice->fecha_emision ? 1 : 0],
-								['type' => 'onecolumn', 'value' => '**Atención al hacer click en SI usted estará timbrando la factura fiscalmente ante el SAT**<br>**No se podrán realizar cambios en el comprobante en el caso de que haya datos erróneos**',],
+								['type' => 'onecolumn', 'value' => '**Atención al hacer click en SI usted estará timbrando la factura fiscalmente ante el SAT**<br>**No se podrán realizar cambios en el comprobante en el caso de que haya datos erróneos**'],
+								// ['type'=> 'onecolumn', 'value' => '<div align="center"><button class="butAction" style="background:red;">Timbrar</button></div>']
 								// ['type' => 'onecolumn', 'value' => '**No se podrán realizar cambios en el comprobante en el caso de que haya datos erróneos**',]
 
 
 							);
-							$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"] . '?id=' . $object->id, $langs->trans('stampFiscal'), '', 'confirm_valid_stamp', $formquestion, 0, 1, 400, 600);
+							$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"] . '?id=' . $object->id, $langs->trans('stampFiscal'), '', 'confirm_valid_stamp', $formquestion, 0, 1, 420, 600);
 							print $formconfirm;
 
 							echo '<script>$(document).ready(function(){

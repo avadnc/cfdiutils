@@ -24,10 +24,14 @@
 
 require_once DOL_DOCUMENT_ROOT . '/compta/facture/class/facture.class.php';
 
+require_once 'cfdisociete.class.php';
+require_once 'cfdiproduct.class.php';
+
 class Cfdifacture extends Facture
 {
 
 	public $fk_facture;
+	public $usocfdi;
 	public $condicion_pago;
 	public $forma_pago;
 	public $metodo_pago;
@@ -41,6 +45,7 @@ class Cfdifacture extends Facture
 	public $fields = array(
 		'rowid' => array('type' => 'integer', 'label' => 'TechnicalID', 'enabled' => 1, 'visible' => -1, 'notnull' => 1, 'position' => 10),
 		'fk_facture' => array('type' => 'integer:Facture:compta/facture/class/facture.class.php', 'label' => 'Facture', 'enabled' => 1, 'visible' => -1, 'notnull' => 1, 'position' => 15),
+		'usocfdi' => array('type' => 'varchar(50)', 'label' => 'usocfdi', 'enabled' => 1, 'visible' => -1, 'notnull' => 1, 'position' => 16),
 		'condicion_pago' => array('type' => 'varchar(50)', 'label' => 'Condicionpago', 'enabled' => 1, 'visible' => -1, 'notnull' => 1, 'position' => 20),
 		'forma_pago' => array('type' => 'varchar(50)', 'label' => 'Formapago', 'enabled' => 1, 'visible' => -1, 'notnull' => 1, 'position' => 25),
 		'metodo_pago' => array('type' => 'varchar(50)', 'label' => 'Metodopago', 'enabled' => 1, 'visible' => -1, 'notnull' => 1, 'position' => 30),
@@ -66,6 +71,12 @@ class Cfdifacture extends Facture
 		} else {
 			$error++;
 			$this->error = 'Failcondicion_pago';
+		}
+		if (!empty($this->usocfdi)) {
+			$this->usocfdi = dol_sanitizeFileName(dol_string_nospecial(trim($this->usocfdi)));
+		} else {
+			$error++;
+			$this->error = 'Failusocfdi';
 		}
 		if (!empty($this->forma_pago)) {
 			$this->forma_pago = dol_sanitizeFileName(dol_string_nospecial(trim($this->forma_pago)));
@@ -100,6 +111,7 @@ class Cfdifacture extends Facture
 			if ($obj->nb == 0) {
 				$sql = "INSERT INTO " . MAIN_DB_PREFIX . "cfdiutils_facture (";
 				$sql .= "fk_facture";
+				$sql .= ",usocfdi";
 				$sql .= ",condicion_pago";
 				$sql .= ",forma_pago";
 				$sql .= ",metodo_pago";
@@ -107,6 +119,7 @@ class Cfdifacture extends Facture
 				$sql .= ",exportacion";
 				$sql .= ") VALUES (";
 				$sql .= $this->fk_facture;
+				$sql .= ",'" . $this->usocfdi . "'";
 				$sql .= ",'" . $this->condicion_pago . "'";
 				$sql .= ",'" . $this->forma_pago . "'";
 				$sql .= ",'" . $this->metodo_pago . "'";
@@ -143,7 +156,7 @@ class Cfdifacture extends Facture
 	public function getStamp()
 	{
 		$this->fk_facture = $this->id;
-		$sql = "SELECT  condicion_pago,forma_pago,metodo_pago,fecha_emision,fecha_timbrado,cer_csd,cer_sat,uuid";
+		$sql = "SELECT  usocfdi,condicion_pago,forma_pago,metodo_pago,exportacion,fecha_emision,fecha_timbrado,cer_csd,cer_sat,uuid";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "cfdiutils_facture WHERE fk_facture = " . $this->fk_facture;
 		$resql = $this->db->query($sql);
 		if ($resql) {
@@ -152,9 +165,11 @@ class Cfdifacture extends Facture
 
 				$obj = $this->db->fetch_object($resql);
 
+				$this->usocfdi = $obj->usocfdi;
 				$this->condicion_pago = $obj->condicion_pago;
 				$this->forma_pago = $obj->forma_pago;
 				$this->metodo_pago = $obj->metodo_pago;
+				$this->exportacion = $obj->exportacion;
 				$this->fecha_emision = $obj->fecha_emision;
 				$this->fecha_timbrado = $obj->fecha_timbrado;
 				$this->cer_csd = $obj->cer_csd;
@@ -166,6 +181,10 @@ class Cfdifacture extends Facture
 
 	public function getHeader()
 	{
+		global $conf;
+
+		$this->getStamp();
+
 		if (strpos($this->ref, '-') !==	false) {
 
 			$ref = explode("-", $this->ref);
@@ -186,36 +205,134 @@ class Cfdifacture extends Facture
 			$tipoComprobante = "E";
 		}
 
-		// echo '<pre>';
-		// var_dump($this);
-		// echo '</pre>';
-		// exit;
-		// $header = [
 
-		// 	'Serie' => $ref[0],
-		// 	'Folio' => $ref[1],
-		// 	'Fecha' => $fecha,
-		// 	'SubTotal' => round($object->total_ht, 2),
-		// 	'Total' => round($object->total_ttc, 2),
-		// 	'TipoDeComprobante' => $tipoComprobante,
-		// 	'LugarExpedicion' => $conf->global->MAIN_INFO_SOCIETE_ZIP,
-		// 	'FormaPago' => isset($object->mode_reglement_code) ? $object->mode_reglement_code : "99",
-		// 	'CondicionesDePago' => $object->cond_reglement_code,
-		// 	'MetodoPago' => $object->array_options['options_formapagocfdi'],
-		// 	'Moneda' => $object->multicurrency_code,
-		// ];
+		//TODO add total discounts before VAT
+
+		if (!$conf->multicurrency->enabled) {
+			$header = [
+				'Serie' => $ref[0],
+				'Folio' => $ref[1],
+				'Fecha' => $this->fecha_emision,
+				'SubTotal' => round($this->total_ht, 2),
+				'Total' => round($this->total_ttc, 2),
+				'TipoDeComprobante' => $tipoComprobante,
+				'LugarExpedicion' => $conf->global->MAIN_INFO_SOCIETE_ZIP,
+				'FormaPago' => $this->forma_pago,
+				'CondicionesDePago' => $this->condicion_pago,
+				'MetodoPago' => $this->metodo_pago,
+				'Exportacion' => $this->exportacion,
+				'Moneda' => $conf->currency,
+
+			];
+		} else {
+			$header = [
+				'Serie' => $ref[0],
+				'Folio' => $ref[1],
+				'Fecha' => $this->fecha_emision,
+				'SubTotal' => round($this->multicurrency_total_ht, 2),
+				'Total' => round($this->multicurrency_total_ttc, 2),
+				'TipoDeComprobante' => $tipoComprobante,
+				'LugarExpedicion' => $conf->global->MAIN_INFO_SOCIETE_ZIP,
+				'FormaPago' => $this->forma_pago,
+				'CondicionesDePago' => $this->condicion_pago,
+				'MetodoPago' => $this->metodo_pago,
+				'Exportacion' => $this->exportacion,
+				'Moneda' => $this->multicurrency_code,
+			];
+
+			if ($this->multicurrency_code != "MXN") {
+				$header['TipoCambio'] = $this->multicurrency_tx;
+			}
+		}
+		return $header;
 	}
 
 	public function getLines()
 	{
+		$conceptos = [];
+		$cfdiproduct = new Cfdiproduct($this->db);
+		$i = 0;
+		//TODO: ADD freelines, multicurrency support
+		foreach ($this->lines as $line) {
+
+			if ($line->fk_product) {
+
+				$cfdiproduct->fetch($line->fk_product);
+				$cfdiproduct->getFiscal();
+
+				$conceptos[$i] = [
+					'ClaveProdServ' => $cfdiproduct->claveprodserv,
+					'Cantidad' => $line->qty,
+					'ClaveUnidad' => $cfdiproduct->umed,
+					'Descripcion' => $line->description ? $cfdiproduct->ref . ' - ' . $line->description : $cfdiproduct->ref . ' - ' . $cfdiproduct->label,
+					'ValorUnitario' => round($cfdiproduct->price, 2),
+					'Importe' => round($line->total_ht, 2),
+					'ObjetoImp' => $cfdiproduct->objetoimp, //Check first if product is exempt VAT, if VAT 0% and Code VAT is EXE
+
+				];
+				$conceptos['Traslado'][$i] = [
+					'Base' => round($line->total_ht, 2),
+					'Impuesto' => $line->vat_src_code,
+					'TipoFactor' => isset($line->vat_src_code) ? "Tasa" : "Exento", //Check objetoimp
+					'TasaOCuota' => number_format(($line->tva_tx / 100), 6),
+					'Importe' => round($line->total_tva, 2),
+				];
+			} else {
+			}
+			$i++;
+		}
+
+		return $conceptos;
 	}
 
 	public function getEmisor()
 	{
+		global $conf;
+
+		$emisor = [
+			'Rfc' => $conf->MAIN_INFO_SIREN,
+			'Nombre' => $conf->MAIN_INFO_SOCIETE_NOM,
+			'RegimenFiscal' => $conf->MAIN_INFO_SOCIETE_FORME_JURIDIQUE
+		];
+
+		return $emisor;
 	}
 
 	public function getReceptor()
 	{
+		$societe = new Cfdisociete($this->db);
+		$societe->fetch($this->socid);
+		$societe->getFiscal();
+
+
+		//TODO add CCE Comercio Exterior data
+
+		$receptor = [
+
+			'Rfc' => $societe->idprof1,
+			'Nombre' => $societe->fiscal_name,
+			'DomicilioFiscalReceptor' => $societe->zip,
+			'RegimenFiscalReceptor' => $societe->forme_juridique_code,
+			'UsoCFDI' => $this->usocfdi
+
+		];
+
+		if ($societe->country_id != '154') {
+
+			$sql = "SELECT code_iso FROM " . MAIN_DB_PREFIX . "c_country where rowid = " . $societe->country_id;
+			$resql = $this->db->query($sql);
+			if ($resql) {
+
+				$obj = $this->db->fetch_object($resql);
+				$receptor['Rfc'] = 'XEXX010101000';
+				$receptor['ResidenciaFiscal'] = $obj->code_iso;
+				$receptor['NumRegIdTrib'] = $societe->idprof1;
+				$receptor['forme_juridique_code'] = '616';
+			} else {
+				return 'ErrorCustomerCountry';
+			}
+		}
+		return $receptor;
 	}
 
 	//Get Dictionary
@@ -245,6 +362,11 @@ class Cfdifacture extends Facture
 	}
 }
 
+class Cfdifactureline extends FactureLigne
+{
+	public $claveprodserv;
+	public $umed;
+}
 
 class Paytype
 {
