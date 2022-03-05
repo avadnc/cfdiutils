@@ -31,9 +31,19 @@
 - Remove classes `CfdiUtils\Elements\Cfdi33\Helpers\SumasConceptosWriter` and `CfdiUtils\Elements\Cfdi40\Helpers\SumasConceptosWriter`.
 
 
-## UNRELEASED
+## Version 2.20.0 2022-02-22
+
+Add `CfdiUtils\Elements\Pagos20` *Elements* to work with "Complemento para recepción de Pagos 2.0".
+Thanks @EmmanuelJCS.
+
+## Version 2.19.1 2022-02-09
+
+Fix `EmisorRegimenFiscal` validation. Add `626 - RESICO`. Thanks @celli33.
 
 The following changes apply only to development and has been applied to main branch.
+
+- Removed duplicated assert in Comprobante #84.
+- Added new regimen 626 in validator for EmisorRegimenFiscal class.
 
 
 ## Version 2.19.0 2022-01-17

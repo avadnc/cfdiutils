@@ -7,4 +7,4 @@ CREATE TABLE `llx_cfdiutils_product` (
 	`unidad` VARCHAR(50) DEFAULT '',
     `entity` INT NOT NULL DEFAULT 0,
 	PRIMARY KEY (`rowid`)
-) ENGINE=innodb;
+);

@@ -10,5 +10,6 @@ return array(
     'XmlResourceRetriever\\' => array($vendorDir . '/eclipxe/xmlresourceretriever/src/XmlResourceRetriever'),
     'Symfony\\Polyfill\\Php80\\' => array($vendorDir . '/symfony/polyfill-php80'),
     'Symfony\\Component\\Process\\' => array($vendorDir . '/symfony/process'),
+    'PhpCfdi\\CfdiCleaner\\' => array($vendorDir . '/phpcfdi/cfdi-cleaner/src'),
     'CfdiUtils\\' => array($vendorDir . '/eclipxe/cfdiutils/src/CfdiUtils'),
 );

@@ -45,7 +45,7 @@ class Cfdisociete extends Societe
 		'cod_colonia' => array('type' => 'varchar(5)', 'label' => 'Codcolonia', 'enabled' => 1, 'visible' => -1, 'position' => 50),
 	);
 
-
+	//Insert
 	public function createFiscal()
 	{
 		$error = 0;
@@ -115,6 +115,7 @@ class Cfdisociete extends Societe
 		}
 	}
 
+	//Update
 	public function updateFiscal()
 	{
 		$error = 0;
@@ -159,6 +160,7 @@ class Cfdisociete extends Societe
 		}
 	}
 
+	//Delete
 	public function deleteFiscal()
 	{
 		$this->fk_soc = $this->id;
@@ -167,6 +169,7 @@ class Cfdisociete extends Societe
 		return $result;
 	}
 
+	//Fetch
 	public function getFiscal()
 	{
 		$sql = "SELECT fiscal_name, municipio,cod_municipio,localidad,cod_localidad,colonia,cod_colonia FROM " . MAIN_DB_PREFIX . "cfdiutils_societe";
@@ -188,6 +191,7 @@ class Cfdisociete extends Societe
 		}
 	}
 
+	//Get Codes
 	public function getFormeJuridique()
 	{
 		$sql = "SELECT count(*) as nb FROM " . MAIN_DB_PREFIX . "c_forme_juridique WHERE fk_pays = 154 AND active = 1";

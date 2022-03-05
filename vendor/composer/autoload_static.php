@@ -21,6 +21,10 @@ class ComposerStaticInit8b6c7f97a570f54ac7f610d27380b6aa
             'Symfony\\Polyfill\\Php80\\' => 23,
             'Symfony\\Component\\Process\\' => 26,
         ),
+        'P' => 
+        array (
+            'PhpCfdi\\CfdiCleaner\\' => 20,
+        ),
         'C' => 
         array (
             'CfdiUtils\\' => 10,
@@ -44,6 +48,10 @@ class ComposerStaticInit8b6c7f97a570f54ac7f610d27380b6aa
         array (
             0 => __DIR__ . '/..' . '/symfony/process',
         ),
+        'PhpCfdi\\CfdiCleaner\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/phpcfdi/cfdi-cleaner/src',
+        ),
         'CfdiUtils\\' => 
         array (
             0 => __DIR__ . '/..' . '/eclipxe/cfdiutils/src/CfdiUtils',
@@ -53,6 +61,7 @@ class ComposerStaticInit8b6c7f97a570f54ac7f610d27380b6aa
     public static $classMap = array (
         'Attribute' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/Attribute.php',
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
+        'PhpToken' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/PhpToken.php',
         'Stringable' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/Stringable.php',
         'UnhandledMatchError' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/UnhandledMatchError.php',
         'ValueError' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/ValueError.php',

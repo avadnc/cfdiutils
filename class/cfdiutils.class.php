@@ -23,7 +23,6 @@
  */
 
 require '../vendor/autoload.php';
-require_once DOL_DOCUMENT_ROOT . '/compta/facture/class/facture.class.php';
 
 class Cfdiutils
 {

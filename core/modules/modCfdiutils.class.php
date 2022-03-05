@@ -120,13 +120,7 @@ class modCfdiutils extends DolibarrModules
 				'paiementcard', // !ficha cuando se realiza el pago
 				'thirdpartycomm',
 				'thirdpartycard',
-				'paymentcard',
-				'paiementcard'
-				//   'data' => array(
-				//       'hookcontext1',
-				//       'hookcontext2',
-				//   ),
-				//   'entity' => '0',
+				'invoicecard',
 			),
 			// Set this to 1 if features of module are opened to external users
 			'moduleforexternal' => 0,
@@ -220,6 +214,7 @@ class modCfdiutils extends DolibarrModules
 				MAIN_DB_PREFIX . 'c_cfdiutils_metodopago',			//CFDI - Método de pago
 				MAIN_DB_PREFIX . 'c_cfdiutils_tiporelacion',		//CFDI - Tipo de relación
 				MAIN_DB_PREFIX . 'c_cfdiutils_objetoimp',			//CFDI - Objeto de Impuesto
+				MAIN_DB_PREFIX . 'c_cfdiutils_exportacion',			//CFDI - Exportacion
 			],
 			'tablib' => [
 				'CFDI - Unidad de medida',					//CFDI - Unidad de medida
@@ -228,6 +223,7 @@ class modCfdiutils extends DolibarrModules
 				'CFDI - Método de Pago',					//CFDI - Método de pago
 				'CFDI - Tipo de relación',					//CFDI - Tipo de relación
 				'CFDI - Objeto de Impuesto',				//CFDI - Objeto de Impuesto
+				'CFDI - Exportación',						//CFDI - Exportacion
 			],
 			'tabsql' => [
 				'SELECT f.rowid as rowid, f.code, f.label, f.active FROM ' . MAIN_DB_PREFIX . 'c_cfdiutils_umed as f', 				//CFDI - Unidad de medida
@@ -236,6 +232,7 @@ class modCfdiutils extends DolibarrModules
 				'SELECT f.rowid as rowid, f.code, f.label, f.active FROM ' . MAIN_DB_PREFIX . 'c_cfdiutils_metodopago as f', 		//CFDI - Método de pago
 				'SELECT f.rowid as rowid, f.code, f.label, f.active FROM ' . MAIN_DB_PREFIX . 'c_cfdiutils_tiporelacion as f',		//CFDI - Tipo de relación
 				'SELECT f.rowid as rowid, f.code, f.label, f.active FROM ' . MAIN_DB_PREFIX . 'c_cfdiutils_objetoimp as f',			//CFDI - Objeto de Impuesto
+				'SELECT f.rowid as rowid, f.code, f.label, f.active FROM ' . MAIN_DB_PREFIX . 'c_cfdiutils_exportacion as f',		//CFDI - Exportacion
 			],
 			'tabsqlsort' => [
 				"label ASC", 	//CFDI - Unidad de medida
@@ -244,6 +241,7 @@ class modCfdiutils extends DolibarrModules
 				"label ASC",	//CFDI - Método de pago
 				"label ASC",	//CFDI - Tipo de relación
 				"label ASC", 	//CFDI - Objeto de Impuesto
+				"label ASC", 	//CFDI - Exportacion
 			],
 			'tabfield' => [
 				"code,label",	//CFDI - Unidad de medida
@@ -252,6 +250,7 @@ class modCfdiutils extends DolibarrModules
 				"code,label",	//CFDI - Método de pago
 				"code,label",	//CFDI - Tipo de relación
 				"code,label", 	//CFDI - Objeto de Impuesto
+				"code,label", 	//CFDI - Exportacion
 			],
 			'tabfieldvalue' => [
 				"code,label", //CFDI - Unidad de medida
@@ -259,7 +258,8 @@ class modCfdiutils extends DolibarrModules
 				"code,label", //CFDI - Uso del CFDI
 				"code,label", //CFDI - Método de pago
 				"code,label", //CFDI - Tipo de relación
-					"code,label", 	//CFDI - Objeto de Impuesto
+				"code,label", 	//CFDI - Objeto de Impuesto
+				"code,label", //CFDI - Exportacion
 			],
 			'tabfieldinsert' => [
 				"code,label",	//CFDI - Unidad de medida
@@ -267,7 +267,8 @@ class modCfdiutils extends DolibarrModules
 				"code,label",	//CFDI - Uso del CFDI
 				"code,label",	//CFDI - Método de pago
 				"code,label",	//CFDI - Tipo de relación
-					"code,label", 	//CFDI - Objeto de Impuesto
+				"code,label", 	//CFDI - Objeto de Impuesto
+				"code,label", 	 //CFDI - Exportacion
 			],
 			'tabrowid' => [
 				"rowid", //CFDI - Unidad de medida
@@ -275,7 +276,8 @@ class modCfdiutils extends DolibarrModules
 				"rowid", //CFDI - Uso del CFDI
 				"rowid", //CFDI - Método de pago
 				"rowid", //CFDI - Tipo de relación
-					"rowid", 	//CFDI - Objeto de Impuesto
+				"rowid", 	//CFDI - Objeto de Impuesto
+				"rowid", 	//CFDI - Exportacion
 			],
 			'tabcond' => [
 				$conf->cfdiutils->enabled, //CFDI - Unidad de medida
@@ -284,6 +286,7 @@ class modCfdiutils extends DolibarrModules
 				$conf->cfdiutils->enabled, //CFDI - Método de pago
 				$conf->cfdiutils->enabled, //CFDI - Tipo de relación
 				$conf->cfdiutils->enabled, //CFDI - Objeto de Impuesto
+				$conf->cfdiutils->enabled, //CFDI - Exportacion
 			]
 		];
 		/* Example:
@@ -350,19 +353,14 @@ class modCfdiutils extends DolibarrModules
 		// Add here entries to declare new permissions
 		/* BEGIN MODULEBUILDER PERMISSIONS */
 		$this->rights[$r][0] = $this->numero . sprintf("%02d", $r + 1); // Permission id (must not be already used)
-		$this->rights[$r][1] = 'Read objects of Cfdiutils'; // Permission label
-		$this->rights[$r][4] = 'facture';
-		$this->rights[$r][5] = 'read'; // In php code, permission will be checked by test if ($user->rights->cfdiutils->facture->read)
+		$this->rights[$r][1] = 'CfdiutilsStamp'; // Permission label
+		$this->rights[$r][4] = 'stamp';
+
 		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf("%02d", $r + 1); // Permission id (must not be already used)
-		$this->rights[$r][1] = 'Create/Update objects of Cfdiutils'; // Permission label
-		$this->rights[$r][4] = 'facture';
-		$this->rights[$r][5] = 'write'; // In php code, permission will be checked by test if ($user->rights->cfdiutils->facture->write)
-		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf("%02d", $r + 1); // Permission id (must not be already used)
-		$this->rights[$r][1] = 'Delete objects of Cfdiutils'; // Permission label
-		$this->rights[$r][4] = 'facture';
-		$this->rights[$r][5] = 'delete'; // In php code, permission will be checked by test if ($user->rights->cfdiutils->facture->delete)
+		$this->rights[$r][1] = 'CfdiutilsCancel'; // Permission label
+		$this->rights[$r][4] = 'cancel';
+
 		$r++;
 		/* END MODULEBUILDER PERMISSIONS */
 
@@ -510,20 +508,24 @@ class modCfdiutils extends DolibarrModules
 		$r = 1;
 		/* BEGIN MODULEBUILDER IMPORT FACTURE */
 
-		 $langs->load("cfdiutils@cfdiutils");
-		 $this->export_code[$r]=$this->rights_class.'_'.$r;
-		 $this->export_label[$r]= 'CfdiproductImport';	// Translation key (used only if key ExportDataset_xxx_z not found)
-		 $this->export_icon[$r]= 'cfdiproduct@cfdiutils';
-		 $keyforclass = 'Cfdiproduct'; $keyforclassfile='/cfdiutils/class/cfdiproduct.class.php'; $keyforelement= 'cfdiproduct@cfdiutils';
-		 include DOL_DOCUMENT_ROOT.'/core/commonfieldsinexport.inc.php';
-		 $keyforselect= 'cfdiproduct'; $keyforaliasextra='extra'; $keyforelement= 'cfdiproduct@cfdiutils';
-				//  include DOL_DOCUMENT_ROOT.'/core/extrafieldsinexport.inc.php';
+		$langs->load("cfdiutils@cfdiutils");
+		$this->export_code[$r] = $this->rights_class . '_' . $r;
+		$this->export_label[$r] = 'CfdiproductImport';	// Translation key (used only if key ExportDataset_xxx_z not found)
+		$this->export_icon[$r] = 'cfdiproduct@cfdiutils';
+		$keyforclass = 'Cfdiproduct';
+		$keyforclassfile = '/cfdiutils/class/cfdiproduct.class.php';
+		$keyforelement = 'cfdiproduct@cfdiutils';
+		include DOL_DOCUMENT_ROOT . '/core/commonfieldsinexport.inc.php';
+		$keyforselect = 'cfdiproduct';
+		$keyforaliasextra = 'extra';
+		$keyforelement = 'cfdiproduct@cfdiutils';
+		//  include DOL_DOCUMENT_ROOT.'/core/extrafieldsinexport.inc.php';
 		//  $this->export_dependencies_array[$r]=array(''=>'ts.rowid', 't.myfield'=>array('t.myfield2','t.myfield3')); // To force to activate one or several fields if we select some fields that need same (like to select a unique key if we ask a field of a child to avoid the DISTINCT to discard them, or for computed field than need several other fields)
-		 $this->export_sql_start[$r]='SELECT DISTINCT ';
-		 $this->export_sql_end[$r]  =' FROM '.MAIN_DB_PREFIX.'facture as t';
-		 $this->export_sql_end[$r] .=' WHERE 1 = 1';
-		 $this->export_sql_end[$r] .=' AND t.entity IN ('.getEntity('facture').')';
-		 $r++;
+		$this->export_sql_start[$r] = 'SELECT DISTINCT ';
+		$this->export_sql_end[$r]  = ' FROM ' . MAIN_DB_PREFIX . 'facture as t';
+		$this->export_sql_end[$r] .= ' WHERE 1 = 1';
+		$this->export_sql_end[$r] .= ' AND t.entity IN (' . getEntity('facture') . ')';
+		$r++;
 		/* END MODULEBUILDER IMPORT FACTURE */
 	}
 
@@ -575,27 +577,34 @@ class modCfdiutils extends DolibarrModules
 			"626" => "Régimen Simplificado de Confianza",
 		];
 
-		foreach($regimen as $cod => $val){
-			$sqlreg = "SELECT count(*) as nb from ".MAIN_DB_PREFIX. "c_forme_juridique where code = ". $cod;
+		//Delete previous data from México
+		$sqlreg = "DELETE FROM " . MAIN_DB_PREFIX . "c_forme_juridique ";
+		$sqlreg = " WHERE fk_pays = 154, ";
+		$this->db->query($sqlreg);
+
+		foreach ($regimen as $cod => $val) {
+
+			$sqlreg = "SELECT count(*) as nb from " . MAIN_DB_PREFIX . "c_forme_juridique where code = " . $cod;
 			$result = $this->db->query($sqlreg);
-            if ($result) {
-                $obj = $this->db->fetch_object($result);
-                if ($obj->nb == 0) {
-                $sqlreg = "INSERT INTO " . MAIN_DB_PREFIX . "c_forme_juridique ";
-				$sqlreg .= "(code,fk_pays,libelle,active)";
-				$sqlreg .= " VALUES (".$cod.",154,'".$val."',1)";
+			if ($result) {
 
-				$this->db->query($sqlreg);
+				$obj = $this->db->fetch_object($result);
+				if ($obj->nb == 0) {
 
+					//Insert New data
+					$sqlreg = "INSERT INTO " . MAIN_DB_PREFIX . "c_forme_juridique ";
+					$sqlreg .= "(code,fk_pays,libelle,active)";
+					$sqlreg .= " VALUES (" . $cod . ",154,'" . $val . "',1)";
+					$this->db->query($sqlreg);
 				} else {
+
+					//if code exists, update to México
 					$sqlreg = "UPDATE " . MAIN_DB_PREFIX . "c_forme_juridique ";
 					$sqlreg .= "SET fk_pays = 154, ";
-					$sqlreg .= " libelle = '".$val."' where code = ".$cod;
-
+					$sqlreg .= " libelle = '" . $val . "' where code = " . $cod;
 					$this->db->query($sqlreg);
 				}
-            }
-
+			}
 		}
 
 		// Document templates

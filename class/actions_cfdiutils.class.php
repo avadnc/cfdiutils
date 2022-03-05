@@ -24,6 +24,7 @@
  */
 require_once 'cfdiproduct.class.php';
 require_once 'cfdisociete.class.php';
+require_once 'cfdifacture.class.php';
 /**
  * Class ActionsCfdiutils
  */
@@ -99,7 +100,7 @@ class ActionsCfdiutils
 
 		$error = 0; // Error counter
 
-		/* Detectar si el producto es fiscal */
+
 
 		if (in_array($parameters['currentcontext'], ['productcard'])) {
 
@@ -205,6 +206,66 @@ class ActionsCfdiutils
 				$societe->deleteFiscal();
 			}
 		}
+
+
+		/* Stamp Invoice */
+
+		if (in_array($parameters['currentcontext'], ['invoicecard'])) {
+
+			if ($action == "confirm_valid_stamp") {
+
+				if ($user->rights->cfdiutils->stamp) {
+
+
+					$condicion_pago = GETPOST('condicion_pago');
+					$forma_pago = GETPOST('forma_pago');
+					$metodo_pago = GETPOST('metodo_pago');
+					$exportacion = GETPOST('exportacion');
+
+					if ($condicion_pago < 0 || $forma_pago < 0 || $metodo_pago < 0 || $exportacion < 0) {
+						setEventMessage('Faltan datos fiscales', 'errors');
+						header('Location: ' . $_SERVER["PHP_SELF"] . '?facid=' . $object->id);
+						exit;
+					}
+
+					if ($metodo_pago == "PPD" && $forma_pago != "99") {
+						setEventMessage('Si el método de pago es PPD, la forma de pago debe ser Por Definir', 'errors');
+						header('Location: ' . $_SERVER["PHP_SELF"] . '?facid=' . $object->id);
+						exit;
+					}
+					if ($forma_pago == "99" && $metodo_pago != "PPD") {
+						setEventMessage('Si la forma de pago es Por Definir, el método de pago debe ser PPD', 'errors');
+						header('Location: ' . $_SERVER["PHP_SELF"] . '?facid=' . $object->id);
+						exit;
+					}
+
+					$invoice = new Cfdifacture($db);
+					$invoice->fetch($object->id);
+					$invoice->getStamp();
+
+					if (!$invoice->fecha_emision) {
+
+						$fecha_emision = date('Y-m-d H:i:s');
+						$fecha_emision = str_replace(" ", "T", $fecha_emision);
+						$invoice->condicion_pago = $condicion_pago;
+						$invoice->forma_pago = $forma_pago;
+						$invoice->metodo_pago = $metodo_pago;
+						$invoice->exportacion = $exportacion;
+						$invoice->fecha_emision = $fecha_emision;
+
+						$result = $invoice->createStamp();
+						if ($result == "InsertSuccess") {
+							$header = $invoice->getHeader();
+						} else {
+							setEventMessage('Error al registrar los datos fiscales de la factura', 'errors');
+							header('Location: ' . $_SERVER["PHP_SELF"] . '?facid=' . $object->id);
+							exit;
+						}
+					}
+				}
+			}
+		}
+
 
 		if (!$error) {
 			$this->results = array('myreturn' => 999);
@@ -462,9 +523,10 @@ class ActionsCfdiutils
 
 	public function formObjectOptions(&$parameters, &$object, &$action)
 	{
-		global $db, $langs;
+		global $user, $db, $langs;
 		$form = new Form($db);
 
+		//Actions for Products
 		if (in_array($parameters['currentcontext'], ['productcard'])) {
 			if ($action != "create") {
 				$cfdiproduct = new Cfdiproduct($db);
@@ -487,6 +549,8 @@ class ActionsCfdiutils
 					echo '<tr><td colspan="2" align="center"><a class="butAction" href="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&action=modifyfiscal">Modificar</a></td></tr>';
 					echo '</table></td></tr>';
 				}
+
+				//Actions
 
 				if ($action == "addfiscal") {
 
@@ -542,73 +606,140 @@ class ActionsCfdiutils
 			echo '<tr><td>Hola</td><td>Caracola</td></tr>';
 		}
 
+		//Actions for thirdparties
 		if (in_array($parameters['currentcontext'], ['thirdpartycomm', 'thirdpartycard'])) {
 
-			// Validate if object is customer
-			if ($object->client == 1) {
+			if ($action != "create") {
 
-				$societe = new Cfdisociete($db);
-				$societe->fetch($object->id);
-				$societe->getFiscal();
-				if (
-					$societe->fiscal_name == null ||
-					$societe->zip == null ||
-					$societe->idprof1 == null ||
-					$societe->forme_juridique_code == null
-				) {
-					echo '<tr><td>Cédula Fiscal</td><td><a class="butAction" href="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&action=addfiscal">Añadir</a></td></tr>';
-				} else {
+				// Validate if object is customer
+				if ($object->client == 1) {
 
-					echo '<tr><td class="left">Nombre Fiscal SAT<a class="editfielda" href="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&action=modifyfiscal">' . img_edit($langs->transnoentitiesnoconv('Edit'), 1) . '</a></td>';
-					echo '<td class="left"><span class="fas fa-building" style=" color: #6c6aa8;padding-right:0.5rem;"></span>' . $societe->fiscal_name . '</td></tr>';
-				}
+					$societe = new Cfdisociete($db);
+					$societe->fetch($object->id);
+					$societe->getFiscal();
+					if (
+						$societe->fiscal_name == null ||
+						$societe->zip == null ||
+						$societe->idprof1 == null ||
+						$societe->forme_juridique_code == null
+					) {
 
-				if ($action == "addfiscal") {
+						echo '<tr><td>Cédula Fiscal</td><td><a class="butAction" href="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&action=addfiscal">Añadir</a></td></tr>';
+					} else {
 
-					$regimen = $societe->getFormeJuridique();
+						echo '<tr><td class="left">Nombre Fiscal SAT<a class="editfielda" href="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&action=modifyfiscal">' . img_edit($langs->transnoentitiesnoconv('Edit'), 1) . '</a></td>';
+						echo '<td class="left"><span class="fas fa-building" style=" color: #6c6aa8;padding-right:0.5rem;"></span>' . $societe->fiscal_name . '</td></tr>';
+					}
 
-					//TODO: Add Municipio, CODE Municipio..... etc...
-					$formquestion = array(
+					if ($action == "addfiscal") {
 
-						'text' => '<h2>' . $langs->trans("dataFiscal") . '</h2>',
-						['type' => 'text', 'name' => 'fiscal_name', 'id' => 'fiscal_name', 'label' => 'Nombre Fiscal SAT', 'value' => strtoupper($societe->name), 'tdclass' => 'fieldrequired'],
-						['type' => 'text', 'name' => 'rfc', 'id' => 'rfc', 'label' => 'RFC', 'value' => strtoupper($societe->idprof1), 'tdclass' => 'fieldrequired'],
-						['type' => 'text', 'name' => 'cp', 'id' => 'cp', 'label' => 'Código Postal', 'value' => $societe->zip, 'tdclass' => 'fieldrequired'],
-						['type' => 'select', 'name' => 'regimen', 'id' => 'regimen', 'label' => 'Régimen Fiscal', 'values' => $regimen, 'default' => $societe->forme_juridique_code, 'tdclass' => 'fieldrequired'],
+						$regimen = $societe->getFormeJuridique();
+
+						//TODO: Add Municipio, CODE Municipio..... etc...
+						$formquestion = array(
+
+							'text' => '<h2>' . $langs->trans("dataFiscal") . '</h2>',
+							['type' => 'text', 'name' => 'fiscal_name', 'id' => 'fiscal_name', 'label' => 'Nombre Fiscal SAT', 'value' => strtoupper($societe->name), 'tdclass' => 'fieldrequired'],
+							['type' => 'text', 'name' => 'rfc', 'id' => 'rfc', 'label' => 'RFC', 'value' => strtoupper($societe->idprof1), 'tdclass' => 'fieldrequired'],
+							['type' => 'text', 'name' => 'cp', 'id' => 'cp', 'label' => 'Código Postal', 'value' => $societe->zip, 'tdclass' => 'fieldrequired'],
+							['type' => 'select', 'name' => 'regimen', 'id' => 'regimen', 'label' => 'Régimen Fiscal', 'values' => $regimen, 'default' => $societe->forme_juridique_code, 'tdclass' => 'fieldrequired'],
 
 
-					);
+						);
 
-					$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"] . '?id=' . $object->id, $langs->trans('selectProductFiscal'), '', 'confirm_valid', $formquestion, 0, 1, 380, 640);
-					print $formconfirm;
+						$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"] . '?id=' . $object->id, $langs->trans('selectProductFiscal'), '', 'confirm_valid', $formquestion, 0, 1, 380, 640);
+						print $formconfirm;
 
-					echo '<script>$(document).ready(function(){
+						echo '<script>$(document).ready(function(){
 						$(".flat").css("width","20rem");
 					});</script>';
-				}
+					}
 
-				if ($action == "modifyfiscal") {
+					//actions
+					if ($action == "modifyfiscal") {
 
-					$regimen = $societe->getFormeJuridique();
+						$regimen = $societe->getFormeJuridique();
 
-					//TODO: Add Municipio, CODE Municipio..... etc...
-					$formquestion = array(
+						//TODO: Add Municipio, CODE Municipio..... etc...
+						$formquestion = array(
 
-						'text' => '<h2>' . $langs->trans("dataFiscal") . '</h2>',
-						['type' => 'text', 'name' => 'fiscal_name', 'id' => 'fiscal_name', 'label' => 'Nombre Fiscal SAT', 'value' => $societe->fiscal_name, 'tdclass' => 'fieldrequired'],
-						['type' => 'text', 'name' => 'rfc', 'id' => 'rfc', 'label' => 'RFC', 'value' => strtoupper($societe->idprof1), 'tdclass' => 'fieldrequired'],
-						['type' => 'text', 'name' => 'cp', 'id' => 'cp', 'label' => 'Código Postal', 'value' => $societe->zip, 'tdclass' => 'fieldrequired'],
-						['type' => 'select', 'name' => 'regimen', 'id' => 'regimen', 'label' => 'Régimen Fiscal', 'values' => $regimen, 'default' => $societe->forme_juridique_code, 'tdclass' => 'fieldrequired'],
+							'text' => '<h2>' . $langs->trans("dataFiscal") . '</h2>',
+							['type' => 'text', 'name' => 'fiscal_name', 'id' => 'fiscal_name', 'label' => 'Nombre Fiscal SAT', 'value' => $societe->fiscal_name, 'tdclass' => 'fieldrequired'],
+							['type' => 'text', 'name' => 'rfc', 'id' => 'rfc', 'label' => 'RFC', 'value' => strtoupper($societe->idprof1), 'tdclass' => 'fieldrequired'],
+							['type' => 'text', 'name' => 'cp', 'id' => 'cp', 'label' => 'Código Postal', 'value' => $societe->zip, 'tdclass' => 'fieldrequired'],
+							['type' => 'select', 'name' => 'regimen', 'id' => 'regimen', 'label' => 'Régimen Fiscal', 'values' => $regimen, 'default' => $societe->forme_juridique_code, 'tdclass' => 'fieldrequired'],
 
 
-					);
+						);
 
-					$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"] . '?id=' . $object->id, $langs->trans('selectProductFiscal'), '', 'confirm_valid', $formquestion, 0, 1, 380, 640);
-					print $formconfirm;
+						$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"] . '?id=' . $object->id, $langs->trans('selectProductFiscal'), '', 'confirm_valid', $formquestion, 0, 1, 380, 640);
+						print $formconfirm;
 
-					echo '<script>$(document).ready(function(){
+						echo '<script>$(document).ready(function(){
 						$(".flat").css("width","20rem");
 					});</script>';
+					}
+				}
+			}
+		}
+
+		//Actions for Invoices
+		if (in_array($parameters['currentcontext'], ['invoicecard'])) {
+			$invoice = new Cfdifacture($db);
+			$payterm = new Paytype($db);
+			$invoice->fetch($object->id);
+			$invoice->getStamp();
+			//Show data from Invoice
+			// echo '<pre>';var_dump($object);echo '</pre>';
+			if ($object->type == Facture::TYPE_STANDARD && $object->status == Facture::STATUS_VALIDATED) {
+				if ($action != "create") {
+
+					if (!$invoice->uuid) {
+						//Invoice Relationship
+						print '<tr class="liste_titre"><td class="titlefield" align="center" colspan="2">Documentos Relacionados</td></tr>';
+						print '<tr><td align="center" colspan="2">';
+						print '<a href="#" class="butAction">Añadir Relación</a>';
+						print '</td></tr>';
+					}
+					// Verify if invoice is stamped
+					print '<tr class="liste_titre"><td class="titlefield" align="center" colspan="2">Información Fiscal</td></tr>';
+
+
+					//Actions
+					if ($action == "stamp") {
+						if ($user->rights->cfdiutils->stamp) {
+							//TODO: User rights
+
+							$condicion_pago = $payterm->getDictionary('payment_term', false, "PaymentConditionShort");
+							$forma_pago = $payterm->getDictionary('paiement', false, "PaymentType");
+
+
+
+
+							$metodo_pago = $invoice->getDictionary('_metodopago');
+							$exportacion = $invoice->getDictionary('_exportacion');
+
+
+							$formquestion = array(
+
+								'text' => '<h2>' . $langs->trans("dataFiscalCFDI") . '</h2>',
+								['type' => 'select', 'name' => 'condicion_pago', 'id' => 'condicion_pago', 'label' => 'Condiciones de pago', 'values' => $condicion_pago, 'default' => $object->cond_reglement_code ? $object->cond_reglement_code : $invoice->condicion_pago, 'tdclass' => 'fieldrequired', 'select_disabled' => $invoice->fecha_emision ? 1 : 0],
+								['type' => 'select', 'name' => 'forma_pago', 'id' => 'forma_pago', 'label' => 'Forma de pago', 'values' => $forma_pago, 'default' =>  $object->mode_reglement_code ? $object->mode_reglement_code : $invoice->forma_pago, 'tdclass' => 'fieldrequired', 'select_disabled' => $invoice->fecha_emision ? 1 : 0],
+								['type' => 'select', 'name' => 'metodo_pago', 'id' => 'metodo_pago', 'label' => 'Método de pago', 'values' => $metodo_pago, 'default' => $invoice->metodo_pago ? $invoice->metodo_pago : $invoice->metodo_pago, 'tdclass' => 'fieldrequired', 'select_disabled' => $invoice->fecha_emision ? 1 : 0],
+								['type' => 'select', 'name' => 'exportacion', 'id' => 'exportacion', 'label' => 'Exportación', 'values' => $exportacion, 'default' => $invoice->exportacion ? $invoice->exportacion : $invoice->exportacion, 'tdclass' => 'fieldrequired', 'select_disabled' => $invoice->fecha_emision ? 1 : 0],
+								['type' => 'onecolumn', 'value' => '**Atención al hacer click en SI usted estará timbrando la factura fiscalmente ante el SAT**<br>**No se podrán realizar cambios en el comprobante en el caso de que haya datos erróneos**',],
+								// ['type' => 'onecolumn', 'value' => '**No se podrán realizar cambios en el comprobante en el caso de que haya datos erróneos**',]
+
+
+							);
+							$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"] . '?id=' . $object->id, $langs->trans('stampFiscal'), '', 'confirm_valid_stamp', $formquestion, 0, 1, 400, 600);
+							print $formconfirm;
+
+							echo '<script>$(document).ready(function(){
+						$(".select2-container").css("width","20rem");
+					});</script>';
+						}
+					}
 				}
 			}
 		}
@@ -624,7 +755,7 @@ class ActionsCfdiutils
 
 	public function printObjectLine(&$parameters, &$objp, &$action)
 	{
-		var_dump($objp);
+		// var_dump($objp);
 		if (in_array($parameters['currentcontext'], ['paiementcard'])) {
 			echo '<td>Adios</td><td>Caracola</td>';
 		}
@@ -632,6 +763,27 @@ class ActionsCfdiutils
 
 	public function addMoreActionsButtons(&$parameters, &$object, &$action)
 	{
+		global $db, $user;
+		if (in_array($parameters['currentcontext'], ['invoicecard'])) {
+
+			$invoice = new Cfdifacture($db);
+			$invoice->fetch($object->id);
+			$invoice->getStamp();
+
+			if (!$invoice->uuid) {
+				if ($object->status == Facture::STATUS_VALIDATED) {
+					if ($user->rights->cfdiutils->stamp) {
+						print '<a href="' . $_SERVER["PHP_SELF"] . '?facid=' . $object->id . '&action=stamp" class="butAction" style="background:#347733 !important">Timbrar SAT</a>';
+					}
+				}
+			} else {
+				if ($object->status == Facture::STATUS_VALIDATED) {
+					if ($user->rights->cfdiutils->cancel) {
+						print '<a href="' . $_SERVER["PHP_SELF"] . '?facid=' . $object->id . '&action=stamp" class="butAction" style="background:#880000 !important">Cancelar SAT</a>';
+					}
+				}
+			}
+		}
 		// if (in_array($parameters['currentcontext'], ['globalcard'])) {
 		// 	echo '<pre>';
 		// 	var_dump($object);
