@@ -40,6 +40,10 @@ function cfdiutilsAdminPrepareHead()
 	$head[$h][2] = 'settings';
 	$h++;
 
+	$head[$h][0] = dol_buildpath("/cfdiutils/admin/pac.php", 1);
+	$head[$h][1] = $langs->trans("pac");
+	$head[$h][2] = 'pac';
+	$h++;
 
 	$head[$h][0] = dol_buildpath("/cfdiutils/admin/paytype.php", 1);
 	$head[$h][1] = $langs->trans("paytype");

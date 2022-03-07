@@ -157,7 +157,8 @@ class Cfdiproduct extends Product
 		$this->db->begin();
 
 		$sql = "UPDATE " . MAIN_DB_PREFIX . "cfdiutils_product ";
-		$sql .= $this->umed ? " SET umed = '" . $this->umed . "'" : '';
+		$sql .= " SET ";
+		$sql .= $this->umed ? "umed = '" . $this->umed . "'" : '';
 		$sql .= $this->claveprodserv ? ", claveprodserv = '" . $this->claveprodserv . "'" : '';
 		$sql .= $this->objetoimp ? ", objetoimp = '" . $this->objetoimp . "'" : '';
 		$sql .= $this->unidad ? ", unidad = '" . $this->unidad . "'" : '';

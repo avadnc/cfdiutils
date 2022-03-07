@@ -104,14 +104,11 @@ class ActionsCfdiutils
 
 
 		if (in_array($parameters['currentcontext'], ['productcard'])) {
-
-
 			$cfdiproduct = new Cfdiproduct($db);
 			$cfdiproduct->fetch($object->id);
 			$cfdiproduct->getFiscal();
 
 			if ($action == "confirm_valid") {
-
 				$umed = GETPOST('umed', 'alpha');
 				$claveprodserv = GETPOST('claveprodserv', 'alpha');
 				$objetoimp = GETPOST('objetoimp', 'alpha');
@@ -135,7 +132,6 @@ class ActionsCfdiutils
 						exit;
 					}
 				} else {
-
 					$cfdiproduct->objetoimp = $objetoimp;
 					$cfdiproduct->claveprodserv = $claveprodserv;
 					$cfdiproduct->umed = $umed;
@@ -160,7 +156,6 @@ class ActionsCfdiutils
 
 		/* print_r($parameters); print_r($object); echo "action: " . $action; */
 		if (in_array($parameters['currentcontext'], ['thirdpartycomm', 'thirdpartycard'])) {
-
 			$societe = new Cfdisociete($db);
 			$societe->fetch($object->id);
 			$societe->getFiscal();
@@ -177,16 +172,15 @@ class ActionsCfdiutils
 					$societe->idprof1 == null ||
 					$societe->forme_juridique_code == null
 				) {
-
 					$societe->fiscal_name = $fiscal_name;
 					$societe->zip = $zip;
-					$societe->idprof1 = $rfc;
+					$societe->idprof1 = mb_strtoupper($rfc);
 					$societe->forme_juridique_code = $regimen;
 					$result = $societe->createFiscal();
 				} else {
 					$societe->fiscal_name = $fiscal_name;
 					$societe->zip = $zip;
-					$societe->idprof1 = $rfc;
+					$societe->idprof1 = mb_strtoupper($rfc);
 					$societe->forme_juridique_code = $regimen;
 					$result = $societe->updateFiscal();
 				}
@@ -215,7 +209,7 @@ class ActionsCfdiutils
 
 
 			//TODO Add actions for free lines entry
-			// echo '<pre>';var_dump($object->lines[$idline]);exit;
+			// echo '<pre>';var_dump($_POST);exit;
 			// $claveprodserv = GETPOST('claveprodserv');
 			// $umed = GETPOST('umed');
 
@@ -234,10 +228,7 @@ class ActionsCfdiutils
 			// }
 
 			if ($action == "confirm_valid_stamp") {
-
 				if ($user->rights->cfdiutils->stamp) {
-
-
 					$condicion_pago = GETPOST('condicion_pago');
 					$forma_pago = GETPOST('forma_pago');
 					$metodo_pago = GETPOST('metodo_pago');
@@ -269,7 +260,6 @@ class ActionsCfdiutils
 
 
 					if (!$invoice->fecha_emision) {
-
 						$fecha_emision = date('Y-m-d H:i:s');
 						$fecha_emision = str_replace(" ", "T", $fecha_emision);
 						$invoice->usocfdi = $usocfdi;
@@ -278,44 +268,74 @@ class ActionsCfdiutils
 						$invoice->metodo_pago = $metodo_pago;
 						$invoice->exportacion = $exportacion;
 						$invoice->fecha_emision = $fecha_emision;
-
-
 						$result = $invoice->createStamp();
-						if ($result == "InsertSuccess") {
 
+						if ($result == "InsertSuccess") {
 							$header = $invoice->getHeader();
 							$emisor = $invoice->getEmisor();
 							$receptor =	$invoice->getReceptor();
 							$conceptos = $invoice->getLines();
 
 							$cfdiutils = new Cfdiutils($db);
-							$xml = $cfdiutils->stampXML($header,$emisor,$receptor,$conceptos);
+							$xml = $cfdiutils->stampXML($header, $emisor, $receptor, $conceptos);
 							$filename = dol_sanitizeFileName($object->ref);
 							$filedir = $conf->facture->multidir_output[$object->entity] . '/' . dol_sanitizeFileName($object->ref);
 							$file_xml = fopen($filedir . "/" . $filename . ".xml", "w");
 							fwrite($file_xml, utf8_encode($xml));
 							fclose($file_xml);
-							exit;
 
-						} else {
+							dol_include_once('/cfdiutils/pac/' . strtolower($conf->global->CFDIUTILS_PAC) . '/' . strtolower($conf->global->CFDIUTILS_PAC) . '.class.php');
+							$classname = ucfirst(strtolower($conf->global->CFDIUTILS_PAC));
+							$pactimbrado = new $classname($db);
+							$result = $pactimbrado->timbrar($xml);
 
-							setEventMessage('Error al registrar los datos fiscales de la factura', 'errors');
-							header('Location: ' . $_SERVER["PHP_SELF"] . '?facid=' . $object->id);
-							exit;
+
+							if ($result['msg'] == '200') {
+								$file_xml = fopen($filedir . "/" . $filename . '-' . $result['data']['uuid'] . ".xml", "w");
+								fwrite($file_xml, utf8_encode($result['data']['xmlFile']));
+								fclose($file_xml);
+
+								$dataXML = $cfdiutils->getData($result['data']['xmlFile']);
+								$invoice->uuid = $dataXML['UUID'];
+								$invoice->cer_sat = $dataXML['NoCertificadoSAT'];
+								$invoice->cer_csd = $dataXML['NoCertificado'];
+								$invoice->fecha_timbrado = $dataXML['FechaTimbrado'];
+								$result = $invoice->updateStamp();
+
+								if ($result == "InsertSuccess") {
+									setEventMessage('Factura timbrada correctamente', 'mesgs');
+									header('Location: ' . $_SERVER["PHP_SELF"] . '?facid=' . $object->id);
+									exit;
+								} else {
+									setEventMessage('Error al registrar los datos fiscales de la factura', 'errors');
+									header('Location: ' . $_SERVER["PHP_SELF"] . '?facid=' . $object->id);
+									exit;
+								}
+							}
+
+							if ($result['msg'] == '400') {
+								$message = $result['msg']['data'];
+								echo $message;exit;
+								setEventMessage($result['msg']['data'], 'errors');
+								header('Location: ' . $_SERVER["PHP_SELF"] . '?facid=' . $object->id);
+								exit;
+							}
 						}
+					} else {
+						
 					}
 				}
 			}
-		}
 
 
-		if (!$error) {
-			$this->results = array('myreturn' => 999);
-			$this->resprints = 'A text to show';
-			return 0; // or return 1 to replace standard code
-		} else {
-			$this->errors[] = 'Error message';
-			return -1;
+			if (!$error) {
+				$this->results = array('myreturn' => 999);
+				$this->resprints = 'A text to show';
+				return 0; // or return 1 to replace standard code
+			} else {
+				$this->errors[] = 'Error message';
+				return -1;
+			}
 		}
 	}
 

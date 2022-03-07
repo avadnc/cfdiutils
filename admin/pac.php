@@ -56,9 +56,7 @@ if (!$res) {
 
 // Libraries
 require_once DOL_DOCUMENT_ROOT . '/core/lib/admin.lib.php';
-require_once DOL_DOCUMENT_ROOT . '/core/lib/functions2.lib.php';
 require_once '../lib/cfdiutils.lib.php';
-dol_include_once('/cfdiutils/class/cfdifacture.class.php');
 
 // Translations
 // $langs->loadLangs(array('bills', 'companies', 'compta', 'products', 'banks', 'main', 'withdrawals'));
@@ -77,36 +75,16 @@ $backtopage = GETPOST('backtopage', 'alpha');
 /*
  * Actions
  */
-if ($action == "save") {
-	foreach ($_POST as $field => $value) {
-		if (is_numeric($value)) {
-			if (strpos($field, 'cod_') !==	false) {
-				$code = explode('cod_', $field);
+if ($action == "savepac") {
+	if (dolibarr_set_const($db, 'CFDIUTILS_PAC', GETPOST('pac'), 'chaine', 1, 'PAC SELECCIONADO', $conf->entity) >= 0) {
 
-				$sql = "SELECT count(*) nb FROM " . MAIN_DB_PREFIX . "c_cfdiutils_formapago WHERE fk_code = " . $code[1];
-				$result = $db->query($sql);
-				if ($result) {
-					$obj = $db->fetch_object($result);
-					if ($obj->nb == 0) {
-						$sql =  "INSERT INTO " . MAIN_DB_PREFIX . "c_cfdiutils_formapago (";
-						$sql .= "fk_code";
-						$sql .= ",code";
-						$sql .= ") VALUES (";
-						$sql .= $code[1];
-						$sql .= ",'" . $value . "'";
-						$sql .= ")";
+        if (file_exists('../pac/' . $conf->global->CFDIUTILS_PAC . '/conf.php')) {
+            // setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
+            include '../pac/'.$conf->global->CFDIUTILS_PAC.'/conf.php';
 
-						$result = $db->query($sql);
-					} else {
+			//TODO: execute first init configuration from conf.php
 
-						$sql = "UPDATE " . MAIN_DB_PREFIX . "c_cfdiutils_formapago";
-						$sql .= " SET code = '" . $value . "' WHERE fk_code =" . $code[1];
-
-						$result = $db->query($sql);
-					}
-				}
-			}
-		}
+        }
 	}
 }
 
@@ -116,8 +94,6 @@ if ($action == "save") {
 /*
  * View
  */
-$paytype = new Paytype($db);
-$payments = $paytype->getDictionary('paiement');
 
 $form = new Form($db);
 
@@ -134,37 +110,44 @@ print load_fiche_titre($langs->trans($page_name), $linkback, 'title_setup');
 
 // Configuration header
 $head = cfdiutilsAdminPrepareHead();
-print dol_get_fiche_head($head, 'paytype', $langs->trans($page_name), -1, 'cfdiutils@cfdiutils');
+print dol_get_fiche_head($head, 'pac', $langs->trans($page_name), -1, 'cfdiutils@cfdiutils');
 
-//Body
-print '<span class="opacitymedium">' . $langs->trans('SetupPaytypeSAT') . '</span><br><br>';
-print '<form method="POST" action="' . $_SERVER["PHP_SELF"] . '">';
+//Page Body
+
+print '<div>';
+
+print '<span class="opacitymedium">' . $langs->trans('SelectPac') . '</span><br><br>';
+print '<form id="savepac" method="POST" action="' . $_SERVER["PHP_SELF"] . '">';
 print '<input type="hidden" name="token" value="' . newToken() . '">';
-print '<input type="hidden" name="action" value="save">';
-print '<table class="noborder centpercent">'; //Init Table
-print '<tr class="liste_titre"><td class="titlefield">Forma de Pago</td><td>Código SAT</td></tr>'; //Title Table
+print '<input type="hidden" name="action" value="savepac">';
+// print '<table class="noborder centpercent">'; //Init Table
+// print '<tr class="liste_titre"><td class="titlefield">Forma de Pago</td><td>Código SAT</td></tr>'; //Title Table
 
-foreach ($payments as $cod => $id) {
+print '<select name="pac" id="pac">';
+$dir = scandir('../pac/', 1);
+foreach ($dir as $pac) {
 
-	$sql = "SELECT code FROM " . MAIN_DB_PREFIX . "c_cfdiutils_formapago WHERE fk_code = " . $id;
-	$resql = $db->query($sql);
-
-	if ($resql) {
-		$obj = $db->fetch_object($resql);
-
-		print '<tr><td>' . $langs->trans("PaymentType" . strtoupper($cod)) . '</td><td><input type="text" name="cod_' . $id . '" value="' . $obj->code . '"></td></tr>';
+	if ($pac === '..' || $pac === '.') {
+		continue;
 	} else {
-		print '<tr><td>' . $langs->trans("PaymentType" . strtoupper($cod)) . '</td><td><input type="text" name="cod_' . $id . '" value=""></td></tr>';
+		if ($conf->global->CFDIUTILS_PAC == strtoupper($pac)) {
+			print '<option value="' . strtoupper($pac) . '" selected>' . strtoupper($pac) . '</option>';
+		} else {
+			print '<option value="' . strtoupper($pac) . '">' . strtoupper($pac) . '</option>';
+		}
 	}
 }
-
-print '</table>';
-print '<br><div class="center">';
-print '<input class="button button-save" type="submit" value="' . $langs->trans("Save") . '">';
-print '</div>';
+print '</select>';
+print '<input type="submit" class="butAction" value="' . $langs->trans('SavePac') . '">';
 print '</form>';
 
-// echo '<pre>';var_dump($payments);echo '<pre>';
+print '</div>';
+if (file_exists('../pac/' . $conf->global->CFDIUTILS_PAC . '/conf.php')) {
+	// setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
+	include '../pac/' . $conf->global->CFDIUTILS_PAC . '/setup.php';
+
+}
+
 
 // Page end
 print dol_get_fiche_end();

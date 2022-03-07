@@ -63,3 +63,6 @@ CfdiutilsPaytype = Forma de pago SAT
 stampFiscal=Generar CFDI
 dataFiscalCFDI=Datos para la generación de la factura fiscal
 NotDefined = Por Definir
+pac= Configuracion PAC
+SetupPaytypeSAT=Configuracón formas de pago SAT
+SavePac= Guardar Pac

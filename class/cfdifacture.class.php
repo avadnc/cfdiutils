@@ -100,8 +100,10 @@ class Cfdifacture extends Facture
 			$this->exportacion = dol_string_nospecial(trim($this->exportacion));
 		} else {
 			$error++;
-			$this->error = 'Failfecha_emision';
+			$this->error = 'Failexportacion';
 		}
+
+		$this->forma_pago = $this->__getFormaPago($this->forma_pago);
 
 		$this->db->begin();
 		$sql = "SELECT count(*) as nb FROM " . MAIN_DB_PREFIX . "cfdiutils_facture where fk_facture = " . $this->fk_facture;
@@ -151,6 +153,31 @@ class Cfdifacture extends Facture
 
 	public function updateStamp()
 	{
+		$error = 0;
+		$this->fk_facture = $this->id;
+		$sql = "UPDATE " . MAIN_DB_PREFIX . "cfdiutils_facture ";
+		$sql .= "SET";
+		$sql .= " uuid = '" . $this->uuid . "'";
+		$sql .= ",fecha_timbrado = '" . $this->fecha_timbrado . "'";
+		$sql .= ",cer_csd = '" . $this->cer_csd . "'";
+		$sql .= ",cer_sat = '" . $this->cer_sat . "'";
+		$sql .= " Where fk_facture = " . $this->fk_facture;
+
+		$this->db->begin();
+
+		$result = $this->db->query($sql);
+		if (!$result) {
+			$error++;
+			$this->error = $this->db->lasterror();
+		}
+
+		if (!$error) {
+			$this->db->commit();
+			return 'InsertSuccess';
+		} else {
+			$this->db->rollback();
+			return -$error;
+		}
 	}
 
 	public function getStamp()
@@ -205,6 +232,8 @@ class Cfdifacture extends Facture
 			$tipoComprobante = "E";
 		}
 
+		//Get SAT CODE
+		$this->forma_pago = $this->__getFormaPago($this->forma_pago);
 
 		//TODO add total discounts before VAT
 
@@ -265,11 +294,14 @@ class Cfdifacture extends Facture
 					'Cantidad' => $line->qty,
 					'ClaveUnidad' => $cfdiproduct->umed,
 					'Descripcion' => $line->description ? $cfdiproduct->ref . ' - ' . $line->description : $cfdiproduct->ref . ' - ' . $cfdiproduct->label,
-					'ValorUnitario' => round($cfdiproduct->price, 2),
+					'ValorUnitario' => round($line->subprice, 2),
 					'Importe' => round($line->total_ht, 2),
 					'ObjetoImp' => $cfdiproduct->objetoimp, //Check first if product is exempt VAT, if VAT 0% and Code VAT is EXE
 
 				];
+				if(!$line->vat_src_code) {
+					$line->vat_src_code = '002';
+				}
 				$conceptos['Traslado'][$i] = [
 					'Base' => round($line->total_ht, 2),
 					'Impuesto' => $line->vat_src_code,
@@ -290,9 +322,9 @@ class Cfdifacture extends Facture
 		global $conf;
 
 		$emisor = [
-			'Rfc' => $conf->MAIN_INFO_SIREN,
-			'Nombre' => $conf->MAIN_INFO_SOCIETE_NOM,
-			'RegimenFiscal' => $conf->MAIN_INFO_SOCIETE_FORME_JURIDIQUE
+			'Rfc' => $conf->global->MAIN_INFO_SIREN,
+			'Nombre' => $conf->global->MAIN_INFO_SOCIETE_NOM,
+			'RegimenFiscal' => $conf->global->MAIN_INFO_SOCIETE_FORME_JURIDIQUE
 		];
 
 		return $emisor;
@@ -300,12 +332,18 @@ class Cfdifacture extends Facture
 
 	public function getReceptor()
 	{
+		global $conf;
+
 		$societe = new Cfdisociete($this->db);
 		$societe->fetch($this->socid);
 		$societe->getFiscal();
 
 
 		//TODO add CCE Comercio Exterior data
+
+		if ($societe->idprof1 == "XAXX010101000") {
+			$societe->zip = $conf->global->MAIN_INFO_SOCIETE_ZIP;
+		}
 
 		$receptor = [
 
@@ -359,6 +397,22 @@ class Cfdifacture extends Facture
 		}
 
 		return $datatable;
+	}
+
+	private function __getFormaPago($code)
+	{
+
+		$sql = "SELECT fp.code from " . MAIN_DB_PREFIX . "c_cfdiutils_formapago fp";
+		$sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "c_paiement cp on cp.id = fp.fk_code";
+		$sql .= " WHERE cp.code ='" . $code . "'";
+
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			$obj = $this->db->fetch_object($resql);
+			return $obj->code;
+		} else {
+			return '99';
+		}
 	}
 }
 

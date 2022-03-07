@@ -34,10 +34,7 @@ class Cfdiutils
 
 	public function __construct(DoliDB $db)
 	{
-		global $conf;
 		$this->db = $db;
-		$this->pac = $conf->global->CFDIUTILS_PAC;
-		dol_include_once('/cfdiutils/pac/' . $this->pac . '/conf.php');
 	}
 
 	/**
@@ -113,5 +110,25 @@ class Cfdiutils
 
 		// método de ayuda para generar el xml y retornarlo como un string
 		return $creator->asXml();
+	}
+
+	public function getData($xml){
+		// clean cfdi
+
+		$cfdi = \CfdiUtils\Cfdi::newFromString($xml);
+		$cfdi->getVersion(); // (string) 3.3
+		$cfdi->getDocument(); // clon del objeto DOMDocument
+		$cfdi->getSource(); // (string) <cfdi:Comprobante...
+		$comprobante = $cfdi->getNode(); // Nodo de trabajo del nodo cfdi:Comprobante
+		$tfd = $comprobante->searchNode('cfdi:Complemento', 'tfd:TimbreFiscalDigital');
+
+		return [
+			'SelloCFD'	=> $tfd['SelloCFD'],
+			'NoCertificado'	=> $comprobante['NoCertificado'],
+			'FechaTimbrado' => $tfd['FechaTimbrado'],
+			'UUID' =>$tfd['UUID'],
+			'NoCertificadoSAT' => $tfd['NoCertificadoSAT'],
+		];
+
 	}
 }
