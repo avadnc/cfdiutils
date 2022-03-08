@@ -351,7 +351,7 @@
             "install-path": "../eclipxe/xmlschemavalidator"
         },
         {
-            "name": "endroid/qrcode",
+            "name": "endroid/qr-code",
             "version": "4.4.7",
             "version_normalized": "4.4.7.0",
             "source": {
@@ -423,8 +423,7 @@
                     "type": "github"
                 }
             ],
-            "abandoned": "endroid/qr-code",
-            "install-path": "../endroid/qrcode"
+            "install-path": "../endroid/qr-code"
         },
         {
             "name": "league/plates",
@@ -747,53 +746,6 @@
                 "source": "https://github.com/spipu/html2pdf/tree/v5.2.4"
             },
             "install-path": "../spipu/html2pdf"
-        },
-        {
-            "name": "stefangabos/world_countries",
-            "version": "v2.4.0",
-            "version_normalized": "2.4.0.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/stefangabos/world_countries.git",
-                "reference": "70190326141053e614aa20328fbdf2fdda695d75"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/stefangabos/world_countries/zipball/70190326141053e614aa20328fbdf2fdda695d75",
-                "reference": "70190326141053e614aa20328fbdf2fdda695d75",
-                "shasum": ""
-            },
-            "time": "2022-02-06T11:57:24+00:00",
-            "type": "library",
-            "installation-source": "dist",
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "LGPL-3.0"
-            ],
-            "authors": [
-                {
-                    "name": "stefangabos",
-                    "email": "contact@stefangabos.ro",
-                    "homepage": "https://github.com/stefangabos",
-                    "role": "Developer"
-                }
-            ],
-            "description": "Constantly updated lists of world countries, territories and areas of geographical interest, with associated alpha-2, alpha-3 and numeric codes as defined by the ISO 3166-1 standard, available in multiple formats and languages, with national flags included",
-            "keywords": [
-                "ISO 3166",
-                "ISO 3166-1",
-                "alpha-2",
-                "alpha-3",
-                "countries",
-                "flag",
-                "flags",
-                "world"
-            ],
-            "support": {
-                "issues": "https://github.com/stefangabos/world_countries/issues",
-                "source": "https://github.com/stefangabos/world_countries/tree/v2.4.0"
-            },
-            "install-path": "../stefangabos/world_countries"
         },
         {
             "name": "symfony/polyfill-php80",

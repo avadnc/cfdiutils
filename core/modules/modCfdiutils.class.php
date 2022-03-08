@@ -121,6 +121,7 @@ class modCfdiutils extends DolibarrModules
 				'thirdpartycomm',
 				'thirdpartycard',
 				'invoicecard',
+				'invoicelist',
 			),
 			// Set this to 1 if features of module are opened to external users
 			'moduleforexternal' => 0,

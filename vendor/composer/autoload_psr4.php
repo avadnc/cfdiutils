@@ -15,7 +15,7 @@ return array(
     'PhpCfdi\\CfdiToPdf\\' => array($vendorDir . '/phpcfdi/cfditopdf/src'),
     'PhpCfdi\\CfdiCleaner\\' => array($vendorDir . '/phpcfdi/cfdi-cleaner/src'),
     'League\\Plates\\' => array($vendorDir . '/league/plates/src'),
-    'Endroid\\QrCode\\' => array($vendorDir . '/endroid/qrcode/src'),
+    'Endroid\\QrCode\\' => array($vendorDir . '/endroid/qr-code/src'),
     'Eclipxe\\Enum\\' => array($vendorDir . '/eclipxe/enum/src'),
     'DASPRiD\\Enum\\' => array($vendorDir . '/dasprid/enum/src'),
     'CfdiUtils\\' => array($vendorDir . '/eclipxe/cfdiutils/src/CfdiUtils'),

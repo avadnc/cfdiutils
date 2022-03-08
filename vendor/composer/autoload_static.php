@@ -90,7 +90,7 @@ class ComposerStaticInit8b6c7f97a570f54ac7f610d27380b6aa
         ),
         'Endroid\\QrCode\\' => 
         array (
-            0 => __DIR__ . '/..' . '/endroid/qrcode/src',
+            0 => __DIR__ . '/..' . '/endroid/qr-code/src',
         ),
         'Eclipxe\\Enum\\' => 
         array (

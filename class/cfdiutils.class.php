@@ -25,6 +25,7 @@
  */
 
 require_once DOL_DOCUMENT_ROOT . '/custom/cfdiutils/vendor/autoload.php';
+
 use PhpCfdi\Credentials\PrivateKey;
 
 class Cfdiutils
@@ -62,7 +63,6 @@ class Cfdiutils
 				}
 				if ($obj->type == "KEY") {
 					$key = $obj->value;
-
 				}
 				if ($obj->type == "PASSKEY") {
 					$passkey = $obj->value;
@@ -75,7 +75,6 @@ class Cfdiutils
 
 			return -1;
 		}
-
 
 		$certificado = new \CfdiUtils\Certificado\Certificado($csd);
 
@@ -96,7 +95,7 @@ class Cfdiutils
 		// método de ayuda para establecer las sumas del comprobante e impuestos
 		// con base en la suma de los conceptos y la agrupación de sus impuestos
 		$creator->addSumasConceptos(null, 2);
-		$pemPrivateKeyContents = PrivateKey::convertDerToPem(file_get_contents('file://'.$key), $passkey !== '');
+		$pemPrivateKeyContents = PrivateKey::convertDerToPem(file_get_contents('file://' . $key), $passkey !== '');
 		$creator->addSello($pemPrivateKeyContents, $passkey);
 		// método de ayuda para generar el sello (obtener la cadena de origen y firmar con la llave privada)
 
@@ -112,7 +111,8 @@ class Cfdiutils
 		return $creator->asXml();
 	}
 
-	public function getData($xml){
+	public function getData($xml)
+	{
 		// clean cfdi
 
 		$cfdi = \CfdiUtils\Cfdi::newFromString($xml);
@@ -121,14 +121,21 @@ class Cfdiutils
 		$cfdi->getSource(); // (string) <cfdi:Comprobante...
 		$comprobante = $cfdi->getNode(); // Nodo de trabajo del nodo cfdi:Comprobante
 		$tfd = $comprobante->searchNode('cfdi:Complemento', 'tfd:TimbreFiscalDigital');
+		$emisor = $comprobante->searchNode('cfdi:Emisor');
+		$receptor = $comprobante->searchNode('cfdi:Receptor');
+
 
 		return [
 			'SelloCFD'	=> $tfd['SelloCFD'],
 			'NoCertificado'	=> $comprobante['NoCertificado'],
 			'FechaTimbrado' => $tfd['FechaTimbrado'],
-			'UUID' =>$tfd['UUID'],
+			'UUID' => $tfd['UUID'],
 			'NoCertificadoSAT' => $tfd['NoCertificadoSAT'],
-		];
+			'EmisorRfc' =>  $emisor['Rfc'],
+			'ReceptorRfc' =>  $receptor['Rfc'],
+			'Total' => $comprobante['Total'],
 
+
+		];
 	}
 }

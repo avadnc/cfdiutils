@@ -2,7 +2,7 @@ TRUNCATE TABLE llx_c_cfdiutils_usocfdi;
 INSERT INTO llx_c_cfdiutils_usocfdi (code,label,active) VALUES ('G02','Devoluciones, descuentos o bonificaciones.',1);
 INSERT INTO llx_c_cfdiutils_usocfdi (code,label,active) VALUES ('G03','Gastos en general.',1);
 INSERT INTO llx_c_cfdiutils_usocfdi (code,label,active) VALUES ('I01','Construcciones.',1);
-INSERT INTO llx_c_cfdiutils_usocfdi (code,label,active) VALUES ('G01','Adquisición de mercancías'
+INSERT INTO llx_c_cfdiutils_usocfdi (code,label,active) VALUES ('G01','Adquisición de mercancías',1);
 INSERT INTO llx_c_cfdiutils_usocfdi (code,label,active) VALUES ('I02','Mobiliario y equipo de oficina por inversiones.',1);
 INSERT INTO llx_c_cfdiutils_usocfdi (code,label,active) VALUES ('I03','Equipo de transporte.',1);
 INSERT INTO llx_c_cfdiutils_usocfdi (code,label,active) VALUES ('I04','Equipo de computo y accesorios.',1);

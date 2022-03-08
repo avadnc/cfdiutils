@@ -1,10 +1,9 @@
 {
     "require": {
         "eclipxe/cfdiutils": "^2.19",
-        "stefangabos/world_countries": "^2.4",
         "phpcfdi/cfdi-cleaner": "^1.2",
         "phpcfdi/credentials": "^1.1",
         "phpcfdi/cfditopdf": "^0.3.4",
-        "endroid/qrcode": "^4.4"
+        "endroid/qr-code": "^4.4"
     }
 }

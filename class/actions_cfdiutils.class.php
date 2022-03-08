@@ -1,4 +1,6 @@
 <?php
+
+
 /* Copyright (C) 2022 SuperAdmin
  *
  * This program is free software: you can redistribute it and/or modify
@@ -26,6 +28,10 @@ require_once 'cfdiproduct.class.php';
 require_once 'cfdisociete.class.php';
 require_once 'cfdifacture.class.php';
 require_once 'cfdiutils.class.php';
+
+use Endroid\QrCode\QrCode;
+use Endroid\QrCode\Writer\PngWriter;
+
 /**
  * Class ActionsCfdiutils
  */
@@ -100,7 +106,7 @@ class ActionsCfdiutils
 		global $db, $conf, $user, $langs, $form;
 
 		$error = 0; // Error counter
-
+		$resultdata = []; //Data for response
 
 
 		if (in_array($parameters['currentcontext'], ['productcard'])) {
@@ -207,26 +213,11 @@ class ActionsCfdiutils
 
 		if (in_array($parameters['currentcontext'], ['invoicecard'])) {
 
+			$invoice = new Cfdifacture($db);
+			$invoice->fetch($object->id);
+			$invoice->getStamp();
 
 			//TODO Add actions for free lines entry
-			// echo '<pre>';var_dump($_POST);exit;
-			// $claveprodserv = GETPOST('claveprodserv');
-			// $umed = GETPOST('umed');
-
-			// if($action == "addline")
-			// {
-			// 	if($claveprodserv > 0 && $umed > 0){
-			// 		echo "hay datos";
-			// 	}
-
-			// }
-
-			// if ($action == "editline")
-			// {
-			// 	if ($claveprodserv > 0 && $umed > 0) {
-			// 	}
-			// }
-
 			if ($action == "confirm_valid_stamp") {
 				if ($user->rights->cfdiutils->stamp) {
 					$condicion_pago = GETPOST('condicion_pago');
@@ -253,13 +244,8 @@ class ActionsCfdiutils
 						exit;
 					}
 
-					$invoice = new Cfdifacture($db);
-					$invoice->fetch($object->id);
-					$invoice->getStamp();
+					if (!$invoice->fecha_emision || $invoice->error) {
 
-
-
-					if (!$invoice->fecha_emision) {
 						$fecha_emision = date('Y-m-d H:i:s');
 						$fecha_emision = str_replace(" ", "T", $fecha_emision);
 						$invoice->usocfdi = $usocfdi;
@@ -267,10 +253,11 @@ class ActionsCfdiutils
 						$invoice->forma_pago = $forma_pago;
 						$invoice->metodo_pago = $metodo_pago;
 						$invoice->exportacion = $exportacion;
-						$invoice->fecha_emision = $fecha_emision;
-						$result = $invoice->createStamp();
+						$invoice->error ?: $invoice->fecha_emision = $fecha_emision; //If error not exists assign fecha_emision
+						$invoice->error ? $result =  $invoice->updateStamp() : $result = $invoice->createStamp(); //If error exists update
 
 						if ($result == "InsertSuccess") {
+
 							$header = $invoice->getHeader();
 							$emisor = $invoice->getEmisor();
 							$receptor =	$invoice->getReceptor();
@@ -287,47 +274,109 @@ class ActionsCfdiutils
 							dol_include_once('/cfdiutils/pac/' . strtolower($conf->global->CFDIUTILS_PAC) . '/' . strtolower($conf->global->CFDIUTILS_PAC) . '.class.php');
 							$classname = ucfirst(strtolower($conf->global->CFDIUTILS_PAC));
 							$pactimbrado = new $classname($db);
-							$result = $pactimbrado->timbrar($xml);
+							$resultdata = $pactimbrado->timbrar($xml);
+						}
+					} else {
 
+						$header = $invoice->getHeader();
+						$emisor = $invoice->getEmisor();
+						$receptor =	$invoice->getReceptor();
+						$conceptos = $invoice->getLines();
+						$cfdiutils = new Cfdiutils($db);
+						$filename = dol_sanitizeFileName($object->ref);
+						$filedir = $conf->facture->multidir_output[$object->entity] . '/' . dol_sanitizeFileName($object->ref);
 
-							if ($result['msg'] == '200') {
-								$file_xml = fopen($filedir . "/" . $filename . '-' . $result['data']['uuid'] . ".xml", "w");
-								fwrite($file_xml, utf8_encode($result['data']['xmlFile']));
-								fclose($file_xml);
+						if (file_exists($filedir . '/' . $filename . '.xml')) {
 
-								$dataXML = $cfdiutils->getData($result['data']['xmlFile']);
-								$invoice->uuid = $dataXML['UUID'];
-								$invoice->cer_sat = $dataXML['NoCertificadoSAT'];
-								$invoice->cer_csd = $dataXML['NoCertificado'];
-								$invoice->fecha_timbrado = $dataXML['FechaTimbrado'];
-								$result = $invoice->updateStamp();
+							$xml = file_get_contents($filedir . '/' . $filename . '.xml');
+						} else {
 
-								if ($result == "InsertSuccess") {
-									setEventMessage('Factura timbrada correctamente', 'mesgs');
-									header('Location: ' . $_SERVER["PHP_SELF"] . '?facid=' . $object->id);
-									exit;
-								} else {
-									setEventMessage('Error al registrar los datos fiscales de la factura', 'errors');
-									header('Location: ' . $_SERVER["PHP_SELF"] . '?facid=' . $object->id);
-									exit;
-								}
-							}
+							$cfdiutils = new Cfdiutils($db);
+							$xml = $cfdiutils->stampXML($header, $emisor, $receptor, $conceptos);
+							$file_xml = fopen($filedir . "/" . $filename . ".xml", "w");
+							fwrite($file_xml, utf8_encode($xml));
+							fclose($file_xml);
+						}
 
-							if ($result['msg'] == '400') {
-								$message = $result['msg']['data'];
-								echo $message;exit;
-								setEventMessage($result['msg']['data'], 'errors');
+						dol_include_once('/cfdiutils/pac/' . strtolower($conf->global->CFDIUTILS_PAC) . '/' . strtolower($conf->global->CFDIUTILS_PAC) . '.class.php');
+						$classname = ucfirst(strtolower($conf->global->CFDIUTILS_PAC));
+						$pactimbrado = new $classname($db);
+						$resultdata = $pactimbrado->timbrar($xml);
+					}
+
+					if ($resultdata) {
+						if ($resultdata['msg'] == '200') {
+							$file_xml = fopen($filedir . "/" . $filename . '-' . $resultdata['data']['uuid'] . ".xml", "w");
+							fwrite($file_xml, utf8_encode($resultdata['data']['xmlFile']));
+							fclose($file_xml);
+
+							$dataXML = $cfdiutils->getData($resultdata['data']['xmlFile']);
+							$invoice->uuid = $dataXML['UUID'];
+							$invoice->cer_sat = $dataXML['NoCertificadoSAT'];
+							$invoice->cer_csd = $dataXML['NoCertificado'];
+							$invoice->fecha_timbrado = $dataXML['FechaTimbrado'];
+							$result = $invoice->updateStamp();
+
+							if ($result == "InsertSuccess") {
+								setEventMessage('Factura timbrada correctamente', 'mesgs');
+								header('Location: ' . $_SERVER["PHP_SELF"] . '?facid=' . $object->id);
+								exit;
+							} else {
+								setEventMessage('Error al registrar los datos fiscales de la factura', 'errors');
 								header('Location: ' . $_SERVER["PHP_SELF"] . '?facid=' . $object->id);
 								exit;
 							}
 						}
+
+						if ($resultdata['msg'] == '400') {
+							$message = $resultdata['data'];
+							$message = explode(' - ', $message);
+							$invoice->error = $message[0];
+							$invoice->updateStamp();
+							setEventMessage($resultdata['data'], 'errors');
+							header('Location: ' . $_SERVER["PHP_SELF"] . '?facid=' . $object->id);
+							exit;
+						}
 					} else {
-						
+						setEventMessage('No hubo respuesta del PAC', 'errors');
+						header('Location: ' . $_SERVER["PHP_SELF"] . '?facid=' . $object->id);
+						exit;
 					}
 				}
 			}
 
+			if ($action == "delete") {
+				if ($invoice->fecha_emision || $invoice->uuid) {
+					setEventMessage('Se inició proceso de timbrado o la factura ya está timbrada', 'errors');
+					header('Location: ' . $_SERVER["PHP_SELF"] . '?facid=' . $object->id);
+					exit;
+				}
+			}
 
+			if ($action == "confirm_valid_addrel") {
+				$factura_uuid = GETPOST('factura_uuid');
+				$tiporelacion = GETPOST('tiporelacion');
+
+				if ($tiporelacion < 0) {
+					setEventMessage('Debe seleccionar el tipo de relación', 'errors');
+					header('Location: ' . $_SERVER["PHP_SELF"] . '?facid=' . $object->id);
+					exit;
+				}
+
+
+				if ($factura_uuid < 0) {
+					$uuid_ext = GETPOST('uuid_ext');
+					$result = $invoice->createRelationship($tiporelacion, null, $uuid_ext);
+				} else {
+					$result = $invoice->createRelationship($tiporelacion, $factura_uuid);
+				}
+
+				if ($result == "InsertSuccess") {
+					setEventMessage('Factura relacionada correctamente', 'mesgs');
+					header('Location: ' . $_SERVER["PHP_SELF"] . '?facid=' . $object->id);
+					exit;
+				}
+			}
 			if (!$error) {
 				$this->results = array('myreturn' => 999);
 				$this->resprints = 'A text to show';
@@ -585,7 +634,7 @@ class ActionsCfdiutils
 
 	public function formObjectOptions(&$parameters, &$object, &$action)
 	{
-		global $user, $db, $langs;
+		global $conf, $user, $db, $langs;
 		$form = new Form($db);
 
 		//Actions for Products
@@ -761,23 +810,70 @@ class ActionsCfdiutils
 			$payterm = new Paytype($db);
 			$invoice->fetch($object->id);
 			$invoice->getStamp();
+
 			//Show data from Invoice
-			// echo '<pre>';var_dump($object);echo '</pre>';
 			if ($object->type == Facture::TYPE_STANDARD && $object->status == Facture::STATUS_VALIDATED) {
 				if ($action != "create") {
-
+					$invoice_relations = $invoice->getRelations();
 					if (!$invoice->uuid) {
 						//Invoice Relationship
-						print '<tr class="liste_titre"><td class="titlefield" align="center" colspan="2">Documentos Relacionados</td></tr>';
+						print '<tr class="liste_titre"><td class="titlefield" align="center" colspan="2">' . $langs->trans('dataFiscalRelationship') . '</td></tr>';
 						print '<tr><td align="center" colspan="2">';
-						print '<a href="#" class="butAction">Añadir Relación</a>';
+						print '<a href="' . $_SERVER["PHP_SELF"] . '?facid=' . $object->id . '&action=addrelation" class="butAction">Añadir Relación</a>';
+						if ($invoice_relations) {
+							$num = count($invoice_relations) - 1;
+							for ($i = 0; $i <= $num; $i++) {
+								if ($invoice_relations[$i]['ref']) {
+									echo '<tr><td>' . $invoice_relations[$i]['ref'] .  '</td><td>' . $invoice_relations[$i]['uuid'] . ' ' . $invoice_relations[$i]['label'] . '&nbsp;<a href="#"><span class="fa fa-times"></a></span></td></tr>';
+								}
+							}
+						}
 						print '</td></tr>';
+					} else {
+
+						$filedir = $conf->facture->multidir_output[$object->entity] . '/' . dol_sanitizeFileName($object->ref);
+						$xml = file_get_contents($filedir . "/" . $object->ref . '-' . $invoice->uuid . ".xml");
+
+						$comprobante = new Cfdiutils($db);
+						$data = $comprobante->getData($xml);
+						$data_cbb = 'https://verificacfdi.facturaelectronica.sat.gob.mx/default.aspx?id=' . $data["UUID"] . '&re=' . $data['EmisorRfc'] . '&rr=' . $data["ReceptorRfc"] . '&tt=' . $data['Total'] . '&fe=' . substr($data['NoCertificado'], -8);
+						$qr = QrCode::create($data_cbb);
+						$writer = new PngWriter();
+						if (!file_exists($filedir . "/" . $object->ref . '-' . $invoice->uuid . ".png")) {
+							$writer->write($qr)->saveToFile($filedir . "/" . $object->ref . '-' . $invoice->uuid . ".png");
+						}
+						$qr = file_get_contents($filedir . "/" . $object->ref . '-' . $invoice->uuid . ".png");
+
+						//show relationship
+						print '<tr class="liste_titre"><td class="titlefield" align="center" colspan="2">' . $langs->trans('dataFiscalRelationship') . '</td></tr>';
+
+						if ($invoice_relations) {
+							$num = count($invoice_relations) - 1;
+							for ($i = 0; $i <= $num; $i++) {
+								if ($invoice_relations[$i]['ref']) {
+									echo '<tr><td>' . $invoice_relations[$i]['ref'] .  '</td><td><span class="badge badge-status4 badge-status">' . strtoupper($invoice_relations[$i]['uuid']) . '</span> <span class="badge  badge-status2 badge-status">' . $invoice_relations[$i]['label'] .'</span></td></tr>';
+								}
+							}
+						}
+
+
+						// Verify if invoice is stamped
+						print '<tr class="liste_titre"><td class="titlefield" align="center" colspan="2">Información Fiscal</td></tr>';
+						print '<tr><td>UUID:</td><td><a href="' . $data_cbb . '" target="__blank">' . $data['UUID'] . '</a></td></tr>';
+						print '<tr><td>Fecha de Emision:</td><td>' . $invoice->fecha_emision . '</td></tr>';
+						print '<tr><td>Fecha de Timbrado:</td><td>' . $data['FechaTimbrado'] . '</td></tr>';
+						print '<tr><td>QR</td><td align="left"><img width="100px" height="100px" src="data:image/png;base64,' . base64_encode($qr) . '"></td></tr>';
+
+						print '<script>$(document).ready(function(){
+							//$(".butActionDelete ").hide();
+						});</script>';
 					}
-					// Verify if invoice is stamped
-					print '<tr class="liste_titre"><td class="titlefield" align="center" colspan="2">Información Fiscal</td></tr>';
+
 
 
 					//Actions
+
+					//Action for stamp CFDI
 					if ($action == "stamp") {
 						if ($user->rights->cfdiutils->stamp) {
 							//TODO: User rights
@@ -788,40 +884,82 @@ class ActionsCfdiutils
 							$exportacion = $invoice->getDictionary('_exportacion');
 							$usocfdi = $invoice->getDictionary('_usocfdi');
 
+							if (!$invoice->fecha_emision) {
 
-							$formquestion = array(
+								$formquestion = array(
 
-								'text' => '<h2>' . $langs->trans("dataFiscalCFDI") . '</h2>',
-								['type' => 'select', 'name' => 'usocfdi', 'id' => 'usocfdi', 'label' => 'Uso del CFDI', 'values' => $usocfdi, 'default' => $invoice->usocfdi ? $invoice->usocfdi : $invoice->usocfdi, 'tdclass' => 'fieldrequired', 'select_disabled' => $invoice->fecha_emision ? 1 : 0],
-								['type' => 'select', 'name' => 'condicion_pago', 'id' => 'condicion_pago', 'label' => 'Condiciones de pago', 'values' => $condicion_pago, 'default' => $object->cond_reglement_code ? $object->cond_reglement_code : $invoice->condicion_pago, 'tdclass' => 'fieldrequired', 'select_disabled' => $invoice->fecha_emision ? 1 : 0],
-								['type' => 'select', 'name' => 'forma_pago', 'id' => 'forma_pago', 'label' => 'Forma de pago', 'values' => $forma_pago, 'default' =>  $object->mode_reglement_code ? $object->mode_reglement_code : $invoice->forma_pago, 'tdclass' => 'fieldrequired', 'select_disabled' => $invoice->fecha_emision ? 1 : 0],
-								['type' => 'select', 'name' => 'metodo_pago', 'id' => 'metodo_pago', 'label' => 'Método de pago', 'values' => $metodo_pago, 'default' => $invoice->metodo_pago ? $invoice->metodo_pago : $invoice->metodo_pago, 'tdclass' => 'fieldrequired', 'select_disabled' => $invoice->fecha_emision ? 1 : 0],
-								['type' => 'select', 'name' => 'exportacion', 'id' => 'exportacion', 'label' => 'Exportación', 'values' => $exportacion, 'default' => $invoice->exportacion ? $invoice->exportacion : $invoice->exportacion, 'tdclass' => 'fieldrequired', 'select_disabled' => $invoice->fecha_emision ? 1 : 0],
-								['type' => 'onecolumn', 'value' => '**Atención al hacer click en SI usted estará timbrando la factura fiscalmente ante el SAT**<br>**No se podrán realizar cambios en el comprobante en el caso de que haya datos erróneos**'],
-								// ['type'=> 'onecolumn', 'value' => '<div align="center"><button class="butAction" style="background:red;">Timbrar</button></div>']
-								// ['type' => 'onecolumn', 'value' => '**No se podrán realizar cambios en el comprobante en el caso de que haya datos erróneos**',]
+									'text' => '<h2>' . $langs->trans("dataFiscalCFDI") . '</h2>',
+									['type' => 'select', 'name' => 'usocfdi', 'id' => 'usocfdi', 'label' => 'Uso del CFDI', 'values' => $usocfdi, 'default' => $invoice->usocfdi ? $invoice->usocfdi : $invoice->usocfdi, 'tdclass' => 'fieldrequired'],
+									['type' => 'select', 'name' => 'condicion_pago', 'id' => 'condicion_pago', 'label' => 'Condiciones de pago', 'values' => $condicion_pago, 'default' => $object->cond_reglement_code ? $object->cond_reglement_code : $invoice->condicion_pago, 'tdclass' => 'fieldrequired'],
+									['type' => 'select', 'name' => 'forma_pago', 'id' => 'forma_pago', 'label' => 'Forma de pago', 'values' => $forma_pago, 'default' =>  $object->mode_reglement_code ? $object->mode_reglement_code : $invoice->forma_pago, 'tdclass' => 'fieldrequired'],
+									['type' => 'select', 'name' => 'metodo_pago', 'id' => 'metodo_pago', 'label' => 'Método de pago', 'values' => $metodo_pago, 'default' => $invoice->metodo_pago ? $invoice->metodo_pago : $invoice->metodo_pago, 'tdclass' => 'fieldrequired'],
+									['type' => 'select', 'name' => 'exportacion', 'id' => 'exportacion', 'label' => 'Exportación', 'values' => $exportacion, 'default' => $invoice->exportacion ? $invoice->exportacion : $invoice->exportacion, 'tdclass' => 'fieldrequired'],
+									['type' => 'onecolumn', 'value' => '**Atención al hacer click en SI usted estará timbrando la factura fiscalmente ante el SAT**<br>**No se podrán realizar cambios en el comprobante en el caso de que haya datos erróneos**'],
+									// ['type'=> 'onecolumn', 'value' => '<div align="center"><bu	tton class="butAction" style="background:red;">Timbrar</button></div>']
+									// ['type' => 'onecolumn', 'value' => '**No se podrán realizar cambios en el comprobante en el caso de que haya datos erróneos**',]
+
+								);
+							} else {
+
+								$formquestion = array(
+
+									'text' => '<h2>' . $langs->trans("dataFiscalCFDI") . '</h2>',
+									['type' => 'select', 'name' => 'usocfdi', 'id' => 'usocfdi', 'label' => 'Uso del CFDI', 'values' => $usocfdi, 'default' => $invoice->usocfdi ? $invoice->usocfdi : $invoice->usocfdi, 'tdclass' => 'fieldrequired', 'select_disabled' => $invoice->error ? 0 : 1],
+									['type' => 'select', 'name' => 'condicion_pago', 'id' => 'condicion_pago', 'label' => 'Condiciones de pago', 'values' => $condicion_pago, 'default' => $object->cond_reglement_code ? $object->cond_reglement_code : $invoice->condicion_pago, 'tdclass' => 'fieldrequired', 'select_disabled' => $invoice->error ? 0 : 1],
+									['type' => 'select', 'name' => 'forma_pago', 'id' => 'forma_pago', 'label' => 'Forma de pago', 'values' => $forma_pago, 'default' =>  $object->mode_reglement_code ? $object->mode_reglement_code : $invoice->forma_pago, 'tdclass' => 'fieldrequired', 'select_disabled' => $invoice->error ? 0 : 1],
+									['type' => 'select', 'name' => 'metodo_pago', 'id' => 'metodo_pago', 'label' => 'Método de pago', 'values' => $metodo_pago, 'default' => $invoice->metodo_pago ? $invoice->metodo_pago : $invoice->metodo_pago, 'tdclass' => 'fieldrequired', 'select_disabled' => $invoice->error ? 0 : 1],
+									['type' => 'select', 'name' => 'exportacion', 'id' => 'exportacion', 'label' => 'Exportación', 'values' => $exportacion, 'default' => $invoice->exportacion ? $invoice->exportacion : $invoice->exportacion, 'tdclass' => 'fieldrequired', 'select_disabled' => $invoice->error ? 0 : 1],
+									['type' => 'onecolumn', 'value' => '**Atención al hacer click en SI usted estará timbrando la factura fiscalmente ante el SAT**<br>**No se podrán realizar cambios en el comprobante en el caso de que haya datos erróneos**'],
+									// ['type'=> 'onecolumn', 'value' => '<div align="center"><bu	tton class="butAction" style="background:red;">Timbrar</button></div>']
+									// ['type' => 'onecolumn', 'value' => '**No se podrán realizar cambios en el comprobante en el caso de que haya datos erróneos**',]
+								);
+							}
 
 
-							);
 							$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"] . '?id=' . $object->id, $langs->trans('stampFiscal'), '', 'confirm_valid_stamp', $formquestion, 0, 1, 420, 600);
 							print $formconfirm;
 
 							echo '<script>$(document).ready(function(){
-						$(".select2-container").css("width","20rem");
-					});</script>';
+							$(".select2-container").css("width","20rem");
+							});</script>';
+						}
+					}
+
+					if ($action == "addrelation") {
+						if ($user->rights->cfdiutils->stamp) {
+							if (!$invoice->fecha_emision) {
+
+								$data_rel = $invoice->getDictionary('_tiporelacion');
+
+								$data = $invoice->getRelationship($object->socid);
+								if ($data) {
+
+									$formquestion = array(
+
+										'text' => '<h2>' . $langs->trans("dataFiscalRelationship") . '</h2>',
+										['type' => 'select', 'name' => 'tiporelacion', 'id' => 'tiporelacion', 'label' => 'Tipo de relación', 'values' => $data_rel, 'tdclass' => 'fieldrequired'],
+										['type' => 'select', 'name' => 'factura_uuid', 'id' => 'factura_uuid', 'label' => 'Factura UUID', 'values' => $data],
+										['type' => 'onecolumn', 'value' => '**En caso de que el UUID se generara fuera del sistema, introducirlo a mano',],
+										['type' => 'text', 'name' => 'uuid_ext', 'id' => 'uuid_ext', 'label' => 'UUID Externo']
+
+										// ['type'=> 'onecolumn', 'value' => '<div align="center"><bu	tton class="butAction" style="background:red;">Timbrar</button></div>']
+										// ['type' => 'onecolumn', 'value' => '**No se podrán realizar cambios en el comprobante en el caso de que haya datos erróneos**',]
+
+									);
+
+									$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"] . '?id=' . $object->id, $langs->trans('adddataFiscalRelationship'), '', 'confirm_valid_addrel', $formquestion, 0, 1, 320, 600);
+									print $formconfirm;
+
+									echo '<script>$(document).ready(function(){
+											$(".select2-container").css("width","20rem");
+										});</script>';
+								}
+							}
 						}
 					}
 				}
 			}
 		}
-	}
-
-	public function printFieldListValue(&$parameters, &$objp, &$action)
-	{
-
-		// if (in_array($parameters['currentcontext'], ['paiementcard'])) {
-		// 	echo '<td>Hola</td><td>Caracola</td>';
-		// }
 	}
 
 	public function printObjectLine(&$parameters, &$objp, &$action)
@@ -861,5 +999,75 @@ class ActionsCfdiutils
 		// 	exit;
 		// }
 		// print '<button class="butAction">Pago CFDI</button>';
+	}
+
+	/* Hook for Lists */
+
+	public function printFieldListSelect($parameters)
+	{
+		if (in_array($parameters['currentcontext'], ['invoicelist'])) {
+			$sql = ",cfdi.uuid, cfdi.fecha_emision,cfdi.fecha_timbrado ";
+			return $sql;
+		}
+	}
+
+	public function printFieldListFrom($parameters, $object)
+	{
+
+		if (in_array($parameters['currentcontext'], ['invoicelist'])) {
+			$sql = " LEFT JOIN " . MAIN_DB_PREFIX . "cfdiutils_facture cfdi on f.rowid = cfdi.fk_facture ";
+			return $sql;
+		}
+	}
+
+	// public function printFieldListSearchParam ($parameters, $object){
+	//     if (in_array($parameters['currentcontext'], ['invoicelist'])) {
+
+
+	// 	}
+	// }
+
+	// Hook for mass action (Massive CFDI STAMP??)
+	// public function printFieldPreListTitle( $parameters){
+	// 	if (in_array($parameters['currentcontext'], ['invoicelist'])) {
+
+	// 		return '<td>HOla</td>';
+	// 	}
+	// }
+
+	public function printFieldListOption($parameters)
+	{
+		if (in_array($parameters['currentcontext'], ['invoicelist'])) {
+			return '<td>&nbsp;</td><td>&nbsp;</td>';
+		}
+	}
+
+	public function printFieldListTitle($parameters)
+	{
+		if (in_array($parameters['currentcontext'], ['invoicelist'])) {
+			return '<th class="wrapcolumntitle liste_titre"><span>Fecha de timbrado</span></th><th class="wrapcolumntitle liste_titre"><span>UUID</span></th>';
+		}
+	}
+	public function printFieldListValue(&$parameters)
+	{
+
+		// if (in_array($parameters['currentcontext'], ['paiementcard'])) {
+		// 	echo '<td>Hola</td><td>Caracola</td>';
+		// }
+
+		if (in_array($parameters['currentcontext'], ['invoicelist'])) {
+
+			// echo '<pre>';var_dump($parameters['obj']);exit;
+			if ($parameters['obj']->uuid) {
+				echo '<td><span class="badge badge-status4 badge-status">' . $parameters['obj']->fecha_timbrado . '</span></td>';
+				echo '<td><span class="badge badge-status4 badge-status">' . strtoupper($parameters['obj']->uuid) . '</span></td>';
+			} else if ($parameters['obj']->fecha_emision && $parameters['obj']->fk_statut == Facture::STATUS_VALIDATED) {
+				echo '<td align="center"><span class="badge badge-status3 badge-status">E - ' . $parameters['obj']->fecha_emision . '</span></td>';
+				echo '<td align="center"><a class="butAction" href="' . DOL_URL_ROOT . '/compta/facture/card.php?facid=' . $parameters['obj']->id . '&action=stamp" target="__blank">Timbrar</td>';
+			} else {
+				echo '<td align="center"><span class="badge  badge-status3 badge-status">Sin Timbrar</span></td>';
+				echo '<td align="center"><a class="butAction" href="' . DOL_URL_ROOT . '/compta/facture/card.php?facid=' . $parameters['obj']->id . '" target="__blank">Ver Factura</td>';
+			}
+		}
 	}
 }

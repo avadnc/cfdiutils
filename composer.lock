@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "464e232680f71e85b827fa2193f0b630",
+    "content-hash": "06dcfee2812dfc502715cefe1be452fa",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -339,7 +339,7 @@
             "time": "2020-04-05T18:20:44+00:00"
         },
         {
-            "name": "endroid/qrcode",
+            "name": "endroid/qr-code",
             "version": "4.4.7",
             "source": {
                 "type": "git",
@@ -408,7 +408,6 @@
                     "type": "github"
                 }
             ],
-            "abandoned": "endroid/qr-code",
             "time": "2022-01-05T21:27:44+00:00"
         },
         {
@@ -717,50 +716,6 @@
                 "source": "https://github.com/spipu/html2pdf/tree/v5.2.4"
             },
             "time": "2021-12-16T15:23:31+00:00"
-        },
-        {
-            "name": "stefangabos/world_countries",
-            "version": "v2.4.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/stefangabos/world_countries.git",
-                "reference": "70190326141053e614aa20328fbdf2fdda695d75"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/stefangabos/world_countries/zipball/70190326141053e614aa20328fbdf2fdda695d75",
-                "reference": "70190326141053e614aa20328fbdf2fdda695d75",
-                "shasum": ""
-            },
-            "type": "library",
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "LGPL-3.0"
-            ],
-            "authors": [
-                {
-                    "name": "stefangabos",
-                    "email": "contact@stefangabos.ro",
-                    "homepage": "https://github.com/stefangabos",
-                    "role": "Developer"
-                }
-            ],
-            "description": "Constantly updated lists of world countries, territories and areas of geographical interest, with associated alpha-2, alpha-3 and numeric codes as defined by the ISO 3166-1 standard, available in multiple formats and languages, with national flags included",
-            "keywords": [
-                "ISO 3166",
-                "ISO 3166-1",
-                "alpha-2",
-                "alpha-3",
-                "countries",
-                "flag",
-                "flags",
-                "world"
-            ],
-            "support": {
-                "issues": "https://github.com/stefangabos/world_countries/issues",
-                "source": "https://github.com/stefangabos/world_countries/tree/v2.4.0"
-            },
-            "time": "2022-02-06T11:57:24+00:00"
         },
         {
             "name": "symfony/polyfill-php80",

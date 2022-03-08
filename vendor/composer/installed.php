@@ -6,7 +6,7 @@
     'aliases' => 
     array (
     ),
-    'reference' => '9212a9df1b84660c6bde6c2c655e9372f3134545',
+    'reference' => '2f18dd7076608c1093a9ce816fc980d65f10a991',
     'name' => '__root__',
   ),
   'versions' => 
@@ -18,7 +18,7 @@
       'aliases' => 
       array (
       ),
-      'reference' => '9212a9df1b84660c6bde6c2c655e9372f3134545',
+      'reference' => '2f18dd7076608c1093a9ce816fc980d65f10a991',
     ),
     'bacon/bacon-qr-code' => 
     array (
@@ -74,7 +74,7 @@
       ),
       'reference' => 'add283790d140e485b5f3dc14d2ce6c7d944277d',
     ),
-    'endroid/qrcode' => 
+    'endroid/qr-code' => 
     array (
       'pretty_version' => '4.4.7',
       'version' => '4.4.7.0',
@@ -127,15 +127,6 @@
       array (
       ),
       'reference' => 'dcb5671cac3d60ff486cf16df389e3bd0dc16ba4',
-    ),
-    'stefangabos/world_countries' => 
-    array (
-      'pretty_version' => 'v2.4.0',
-      'version' => '2.4.0.0',
-      'aliases' => 
-      array (
-      ),
-      'reference' => '70190326141053e614aa20328fbdf2fdda695d75',
     ),
     'symfony/polyfill-php80' => 
     array (
