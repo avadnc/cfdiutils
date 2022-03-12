@@ -215,7 +215,8 @@ class modCfdiutils extends DolibarrModules
 				MAIN_DB_PREFIX . 'c_cfdiutils_metodopago',			//CFDI - Método de pago
 				MAIN_DB_PREFIX . 'c_cfdiutils_tiporelacion',		//CFDI - Tipo de relación
 				MAIN_DB_PREFIX . 'c_cfdiutils_objetoimp',			//CFDI - Objeto de Impuesto
-				MAIN_DB_PREFIX . 'c_cfdiutils_exportacion',			//CFDI - Exportacion
+				MAIN_DB_PREFIX . 'c_cfdiutils_exportacion',			//CFDI - Exportación
+				MAIN_DB_PREFIX . 'c_cfdiutils_cancelacion',			//CFDI - Cancelación
 			],
 			'tablib' => [
 				'CFDI - Unidad de medida',					//CFDI - Unidad de medida
@@ -224,7 +225,8 @@ class modCfdiutils extends DolibarrModules
 				'CFDI - Método de Pago',					//CFDI - Método de pago
 				'CFDI - Tipo de relación',					//CFDI - Tipo de relación
 				'CFDI - Objeto de Impuesto',				//CFDI - Objeto de Impuesto
-				'CFDI - Exportación',						//CFDI - Exportacion
+				'CFDI - Exportación',						//CFDI - Exportación
+				'CFDI - Cancelación',						//CFDI - Cancelación
 			],
 			'tabsql' => [
 				'SELECT f.rowid as rowid, f.code, f.label, f.active FROM ' . MAIN_DB_PREFIX . 'c_cfdiutils_umed as f', 				//CFDI - Unidad de medida
@@ -234,6 +236,7 @@ class modCfdiutils extends DolibarrModules
 				'SELECT f.rowid as rowid, f.code, f.label, f.active FROM ' . MAIN_DB_PREFIX . 'c_cfdiutils_tiporelacion as f',		//CFDI - Tipo de relación
 				'SELECT f.rowid as rowid, f.code, f.label, f.active FROM ' . MAIN_DB_PREFIX . 'c_cfdiutils_objetoimp as f',			//CFDI - Objeto de Impuesto
 				'SELECT f.rowid as rowid, f.code, f.label, f.active FROM ' . MAIN_DB_PREFIX . 'c_cfdiutils_exportacion as f',		//CFDI - Exportacion
+				'SELECT f.rowid as rowid, f.code, f.label, f.active FROM ' . MAIN_DB_PREFIX . 'c_cfdiutils_cancelacion as f',		//CFDI - Cancelación
 			],
 			'tabsqlsort' => [
 				"label ASC", 	//CFDI - Unidad de medida
@@ -243,6 +246,7 @@ class modCfdiutils extends DolibarrModules
 				"label ASC",	//CFDI - Tipo de relación
 				"label ASC", 	//CFDI - Objeto de Impuesto
 				"label ASC", 	//CFDI - Exportacion
+				"label ASC", 	//CFDI - Cancelación
 			],
 			'tabfield' => [
 				"code,label",	//CFDI - Unidad de medida
@@ -252,6 +256,7 @@ class modCfdiutils extends DolibarrModules
 				"code,label",	//CFDI - Tipo de relación
 				"code,label", 	//CFDI - Objeto de Impuesto
 				"code,label", 	//CFDI - Exportacion
+				"code,label", 	//CFDI - Cancelación
 			],
 			'tabfieldvalue' => [
 				"code,label", //CFDI - Unidad de medida
@@ -261,6 +266,7 @@ class modCfdiutils extends DolibarrModules
 				"code,label", //CFDI - Tipo de relación
 				"code,label", 	//CFDI - Objeto de Impuesto
 				"code,label", //CFDI - Exportacion
+				"code,label", //CFDI - Cancelación
 			],
 			'tabfieldinsert' => [
 				"code,label",	//CFDI - Unidad de medida
@@ -270,6 +276,7 @@ class modCfdiutils extends DolibarrModules
 				"code,label",	//CFDI - Tipo de relación
 				"code,label", 	//CFDI - Objeto de Impuesto
 				"code,label", 	 //CFDI - Exportacion
+				"code,label", 	 //CFDI - Cancelación
 			],
 			'tabrowid' => [
 				"rowid", //CFDI - Unidad de medida
@@ -279,6 +286,7 @@ class modCfdiutils extends DolibarrModules
 				"rowid", //CFDI - Tipo de relación
 				"rowid", 	//CFDI - Objeto de Impuesto
 				"rowid", 	//CFDI - Exportacion
+				"rowid", 	//CFDI - Cancelación
 			],
 			'tabcond' => [
 				$conf->cfdiutils->enabled, //CFDI - Unidad de medida
@@ -288,6 +296,7 @@ class modCfdiutils extends DolibarrModules
 				$conf->cfdiutils->enabled, //CFDI - Tipo de relación
 				$conf->cfdiutils->enabled, //CFDI - Objeto de Impuesto
 				$conf->cfdiutils->enabled, //CFDI - Exportacion
+				$conf->cfdiutils->enabled, //CFDI - Cancelación
 			]
 		];
 		/* Example:

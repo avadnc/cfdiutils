@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS `llx_cfdiutils_facture` (
   `cer_sat` varchar(50) DEFAULT NULL,
   `uuid` varchar(50) DEFAULT NULL,
   `error` varchar(255) DEFAULT NULL,
+  `pac` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`rowid`)
 ) ;
 

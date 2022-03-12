@@ -1,6 +1,7 @@
 <?php
 
 
+
 /* Copyright (C) 2022 SuperAdmin
  *
  * This program is free software: you can redistribute it and/or modify
@@ -107,14 +108,14 @@ class ActionsCfdiutils
 
 		$error = 0; // Error counter
 		$resultdata = []; //Data for response
-
+		$confirm = GETPOST('confirm', 'alpha');
 
 		if (in_array($parameters['currentcontext'], ['productcard'])) {
 			$cfdiproduct = new Cfdiproduct($db);
 			$cfdiproduct->fetch($object->id);
 			$cfdiproduct->getFiscal();
 
-			if ($action == "confirm_valid") {
+			if ($action == "confirm_valid" && $confirm == "yes") {
 				$umed = GETPOST('umed', 'alpha');
 				$claveprodserv = GETPOST('claveprodserv', 'alpha');
 				$objetoimp = GETPOST('objetoimp', 'alpha');
@@ -154,7 +155,7 @@ class ActionsCfdiutils
 				}
 			}
 
-			if ($action == "confirm_delete") {
+			if ($action == "confirm_delete" && $confirm == "yes") {
 				$cfdiproduct->deleteFiscal();
 			}
 		}
@@ -166,7 +167,7 @@ class ActionsCfdiutils
 			$societe->fetch($object->id);
 			$societe->getFiscal();
 
-			if ($action == "confirm_valid") {
+			if ($action == "confirm_valid" && $confirm == "yes") {
 				$fiscal_name = GETPOST('fiscal_name');
 				$zip = GETPOST('cp', 'int');
 				$rfc = GETPOST('rfc', 'alpha');
@@ -180,13 +181,13 @@ class ActionsCfdiutils
 				) {
 					$societe->fiscal_name = $fiscal_name;
 					$societe->zip = $zip;
-					$societe->idprof1 = mb_strtoupper($rfc);
+					$societe->idprof1 = mb_dol_strtoupper($rfc);
 					$societe->forme_juridique_code = $regimen;
 					$result = $societe->createFiscal();
 				} else {
 					$societe->fiscal_name = $fiscal_name;
 					$societe->zip = $zip;
-					$societe->idprof1 = mb_strtoupper($rfc);
+					$societe->idprof1 = mb_dol_strtoupper($rfc);
 					$societe->forme_juridique_code = $regimen;
 					$result = $societe->updateFiscal();
 				}
@@ -203,7 +204,7 @@ class ActionsCfdiutils
 				}
 			}
 
-			if ($action == "confirm_delete") {
+			if ($action == "confirm_delete" && $confirm == "yes") {
 				$societe->deleteFiscal();
 			}
 		}
@@ -218,7 +219,7 @@ class ActionsCfdiutils
 			$invoice->getStamp();
 
 			//TODO Add actions for free lines entry
-			if ($action == "confirm_valid_stamp") {
+			if ($action == "confirm_valid_stamp" && $confirm == "yes") {
 				if ($user->rights->cfdiutils->stamp) {
 					$condicion_pago = GETPOST('condicion_pago');
 					$forma_pago = GETPOST('forma_pago');
@@ -253,6 +254,11 @@ class ActionsCfdiutils
 						$invoice->forma_pago = $forma_pago;
 						$invoice->metodo_pago = $metodo_pago;
 						$invoice->exportacion = $exportacion;
+
+						if (!$invoice->error) {
+							$invoice->pac = $conf->global->CFDIUTILS_PAC;
+						}
+
 						$invoice->error ?: $invoice->fecha_emision = $fecha_emision; //If error not exists assign fecha_emision
 						$invoice->error ? $result =  $invoice->updateStamp() : $result = $invoice->createStamp(); //If error exists update
 
@@ -264,19 +270,26 @@ class ActionsCfdiutils
 							$conceptos = $invoice->getLines();
 
 							$cfdiutils = new Cfdiutils($db);
-							$xml = $cfdiutils->stampXML($header, $emisor, $receptor, $conceptos);
+							//Add doc relacionados
+							$docrelations = $invoice->getRelations();
+							$xml = $cfdiutils->stampXML($header, $emisor, $receptor, $conceptos, $docrelations ? $docrelations : null);
 							$filename = dol_sanitizeFileName($object->ref);
 							$filedir = $conf->facture->multidir_output[$object->entity] . '/' . dol_sanitizeFileName($object->ref);
 							$file_xml = fopen($filedir . "/" . $filename . ".xml", "w");
 							fwrite($file_xml, utf8_encode($xml));
 							fclose($file_xml);
-
-							dol_include_once('/cfdiutils/pac/' . strtolower($conf->global->CFDIUTILS_PAC) . '/' . strtolower($conf->global->CFDIUTILS_PAC) . '.class.php');
-							$classname = ucfirst(strtolower($conf->global->CFDIUTILS_PAC));
+							dol_include_once('/cfdiutils/pac/' . dol_strtolower($conf->global->CFDIUTILS_PAC) . '/' . dol_strtolower($conf->global->CFDIUTILS_PAC) . '.class.php');
+							$classname = ucfirst(dol_strtolower($conf->global->CFDIUTILS_PAC));
 							$pactimbrado = new $classname($db);
 							$resultdata = $pactimbrado->timbrar($xml);
 						}
 					} else {
+
+						if ($invoice->pac != $conf->global->CFDIUTILS_PAC) {
+							setEventMessage('No se puede timbrar en PAC distinto al original', 'errors');
+							header('Location: ' . $_SERVER["PHP_SELF"] . '?facid=' . $object->id);
+							exit;
+						}
 
 						$header = $invoice->getHeader();
 						$emisor = $invoice->getEmisor();
@@ -287,19 +300,19 @@ class ActionsCfdiutils
 						$filedir = $conf->facture->multidir_output[$object->entity] . '/' . dol_sanitizeFileName($object->ref);
 
 						if (file_exists($filedir . '/' . $filename . '.xml')) {
-
 							$xml = file_get_contents($filedir . '/' . $filename . '.xml');
 						} else {
 
 							$cfdiutils = new Cfdiutils($db);
-							$xml = $cfdiutils->stampXML($header, $emisor, $receptor, $conceptos);
+							$docrelations = $invoice->getRelations();
+							$xml = $cfdiutils->stampXML($header, $emisor, $receptor, $conceptos, $docrelations ? $docrelations : null);
 							$file_xml = fopen($filedir . "/" . $filename . ".xml", "w");
 							fwrite($file_xml, utf8_encode($xml));
 							fclose($file_xml);
 						}
 
-						dol_include_once('/cfdiutils/pac/' . strtolower($conf->global->CFDIUTILS_PAC) . '/' . strtolower($conf->global->CFDIUTILS_PAC) . '.class.php');
-						$classname = ucfirst(strtolower($conf->global->CFDIUTILS_PAC));
+						dol_include_once('/cfdiutils/pac/' . dol_strtolower($conf->global->CFDIUTILS_PAC) . '/' . dol_strtolower($conf->global->CFDIUTILS_PAC) . '.class.php');
+						$classname = ucfirst(dol_strtolower($conf->global->CFDIUTILS_PAC));
 						$pactimbrado = new $classname($db);
 						$resultdata = $pactimbrado->timbrar($xml);
 					}
@@ -318,6 +331,7 @@ class ActionsCfdiutils
 							$result = $invoice->updateStamp();
 
 							if ($result == "InsertSuccess") {
+								$this->__createQr($invoice);
 								setEventMessage('Factura timbrada correctamente', 'mesgs');
 								header('Location: ' . $_SERVER["PHP_SELF"] . '?facid=' . $object->id);
 								exit;
@@ -342,10 +356,12 @@ class ActionsCfdiutils
 						header('Location: ' . $_SERVER["PHP_SELF"] . '?facid=' . $object->id);
 						exit;
 					}
+					//Generate QR Code with xml data
+
 				}
 			}
 
-			if ($action == "delete") {
+			if ($action == "delete" && $confirm == "yes") {
 				if ($invoice->fecha_emision || $invoice->uuid) {
 					setEventMessage('Se inició proceso de timbrado o la factura ya está timbrada', 'errors');
 					header('Location: ' . $_SERVER["PHP_SELF"] . '?facid=' . $object->id);
@@ -353,7 +369,7 @@ class ActionsCfdiutils
 				}
 			}
 
-			if ($action == "confirm_valid_addrel") {
+			if ($action == "confirm_valid_addrel" && $confirm == "yes") {
 				$factura_uuid = GETPOST('factura_uuid');
 				$tiporelacion = GETPOST('tiporelacion');
 
@@ -375,6 +391,19 @@ class ActionsCfdiutils
 					setEventMessage('Factura relacionada correctamente', 'mesgs');
 					header('Location: ' . $_SERVER["PHP_SELF"] . '?facid=' . $object->id);
 					exit;
+				}
+			}
+
+			if ($action == "deleteRelation" && $confirm == "yes") {
+				$id = GETPOST('id');
+
+				if ($id > 0) {
+					$result = $invoice->deleteRel($id);
+					if ($result > 0) {
+						setEventMessage('Relación eliminada con éxito', 'mesgs');
+						header('Location: ' . $_SERVER["PHP_SELF"] . '?facid=' . $object->id);
+						exit;
+					}
 				}
 			}
 			if (!$error) {
@@ -750,8 +779,8 @@ class ActionsCfdiutils
 						$formquestion = array(
 
 							'text' => '<h2>' . $langs->trans("dataFiscal") . '</h2>',
-							['type' => 'text', 'name' => 'fiscal_name', 'id' => 'fiscal_name', 'label' => 'Nombre Fiscal SAT', 'value' => strtoupper($societe->name), 'tdclass' => 'fieldrequired'],
-							['type' => 'text', 'name' => 'rfc', 'id' => 'rfc', 'label' => 'RFC', 'value' => strtoupper($societe->idprof1), 'tdclass' => 'fieldrequired'],
+							['type' => 'text', 'name' => 'fiscal_name', 'id' => 'fiscal_name', 'label' => 'Nombre Fiscal SAT', 'value' => dol_strtoupper($societe->name), 'tdclass' => 'fieldrequired'],
+							['type' => 'text', 'name' => 'rfc', 'id' => 'rfc', 'label' => 'RFC', 'value' => dol_strtoupper($societe->idprof1), 'tdclass' => 'fieldrequired'],
 							['type' => 'text', 'name' => 'cp', 'id' => 'cp', 'label' => 'Código Postal', 'value' => $societe->zip, 'tdclass' => 'fieldrequired'],
 							['type' => 'select', 'name' => 'regimen', 'id' => 'regimen', 'label' => 'Régimen Fiscal', 'values' => $regimen, 'default' => $societe->forme_juridique_code, 'tdclass' => 'fieldrequired'],
 
@@ -776,7 +805,7 @@ class ActionsCfdiutils
 
 							'text' => '<h2>' . $langs->trans("dataFiscal") . '</h2>',
 							['type' => 'text', 'name' => 'fiscal_name', 'id' => 'fiscal_name', 'label' => 'Nombre Fiscal SAT', 'value' => $societe->fiscal_name, 'tdclass' => 'fieldrequired'],
-							['type' => 'text', 'name' => 'rfc', 'id' => 'rfc', 'label' => 'RFC', 'value' => strtoupper($societe->idprof1), 'tdclass' => 'fieldrequired'],
+							['type' => 'text', 'name' => 'rfc', 'id' => 'rfc', 'label' => 'RFC', 'value' => dol_strtoupper($societe->idprof1), 'tdclass' => 'fieldrequired'],
 							['type' => 'text', 'name' => 'cp', 'id' => 'cp', 'label' => 'Código Postal', 'value' => $societe->zip, 'tdclass' => 'fieldrequired'],
 							['type' => 'select', 'name' => 'regimen', 'id' => 'regimen', 'label' => 'Régimen Fiscal', 'values' => $regimen, 'default' => $societe->forme_juridique_code, 'tdclass' => 'fieldrequired'],
 
@@ -797,79 +826,79 @@ class ActionsCfdiutils
 		//Actions for Invoices
 		if (in_array($parameters['currentcontext'], ['invoicecard'])) {
 
-			// $idline = count($object->lines) - 1;
-			// $formquestion = [
-			// 	['type' => 'onecolumn', 'value' => '<select><option>--Seleccionar Pedimento --</option><option value="0">123456</option></select><input type="text">']
-			// ];
-
-			// $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"] . '?id=' . $object->id, $langs->trans('selectProductFiscal'), '', 'confirm_valid', $formquestion, 0, 1, 300, 600);
-			// print $formconfirm;
-
-
 			$invoice = new Cfdifacture($db);
 			$payterm = new Paytype($db);
 			$invoice->fetch($object->id);
 			$invoice->getStamp();
 
+			dol_include_once('/cfdiutils/pac/' . dol_strtolower($conf->global->CFDIUTILS_PAC) . '/' . dol_strtolower($conf->global->CFDIUTILS_PAC) . '.class.php');
+			$classname = ucfirst(dol_strtolower($conf->global->CFDIUTILS_PAC));
+			$pactimbrado = new $classname($db);
+
+
 			//Show data from Invoice
 			if ($object->type == Facture::TYPE_STANDARD && $object->status == Facture::STATUS_VALIDATED) {
+
 				if ($action != "create") {
+
 					$invoice_relations = $invoice->getRelations();
-					if (!$invoice->uuid) {
+
+					if (!$invoice->uuid || $invoice->error && !$invoice->uuid) {
+
 						//Invoice Relationship
 						print '<tr class="liste_titre"><td class="titlefield" align="center" colspan="2">' . $langs->trans('dataFiscalRelationship') . '</td></tr>';
-						print '<tr><td align="center" colspan="2">';
-						print '<a href="' . $_SERVER["PHP_SELF"] . '?facid=' . $object->id . '&action=addrelation" class="butAction">Añadir Relación</a>';
+						print '<tr><td align="center" colspan="2"><a href="' . $_SERVER["PHP_SELF"] . '?facid=' . $object->id . '&action=addrelation" class="butAction">Añadir Relación</a></tr>';
 						if ($invoice_relations) {
-							$num = count($invoice_relations) - 1;
-							for ($i = 0; $i <= $num; $i++) {
-								if ($invoice_relations[$i]['ref']) {
-									echo '<tr><td>' . $invoice_relations[$i]['ref'] .  '</td><td>' . $invoice_relations[$i]['uuid'] . ' ' . $invoice_relations[$i]['label'] . '&nbsp;<a href="#"><span class="fa fa-times"></a></span></td></tr>';
-								}
+							foreach ($invoice_relations as $invrel) {
+
+								echo $invrel['ref'] ? '<tr><td>' . $invrel['ref'] . '</td><td>' . $invrel['label'] . '<br>' .  $invrel['uuid'] . '&nbsp;<a href="' . $_SERVER["PHP_SELF"] . '?facid=' . $object->id . '&action=deleteRelation&id=' . $invrel['id'] . '"><span class="fa fa-trash"></a></span></td></tr>' : '<tr><td>UUID Externo</td><td>' . $invrel['label'] . '<br>' .  $invrel['uuid'] . '&nbsp;<a href="' . $_SERVER["PHP_SELF"] . '?facid=' . $object->id . '&action=deleteRelation&id=' . $invrel['id'] . '"><span class="fa fa-trash"></span></a></td></tr>';
 							}
 						}
-						print '</td></tr>';
 					} else {
 
+						$emisor = $invoice->getEmisor();
+						$receptor = $invoice->getReceptor();
+
+						if ($conf->multicurrency->enabled) {
+							$expression = 'id=' . $invoice->uuid . '&re=' . $emisor['Rfc'] . '&rr=' . $receptor['Rfc'] . '&tt=' . $invoice->multicurrency_total_ttc . '&fe=' . substr($invoice->cer_sat, -8);
+						} else {
+							$expression = 'id=' . $invoice->uuid . '&re=' . $emisor['Rfc'] . '&rr=' . $receptor['Rfc'] . '&tt=' . $invoice->total_ttc . '&fe=' . substr($invoice->cer_sat, -8);
+						}
+
+						$data_cbb = 'https://verificacfdi.facturaelectronica.sat.gob.mx/default.aspx?' . $expression;
 						$filedir = $conf->facture->multidir_output[$object->entity] . '/' . dol_sanitizeFileName($object->ref);
-						$xml = file_get_contents($filedir . "/" . $object->ref . '-' . $invoice->uuid . ".xml");
-
-						$comprobante = new Cfdiutils($db);
-						$data = $comprobante->getData($xml);
-						$data_cbb = 'https://verificacfdi.facturaelectronica.sat.gob.mx/default.aspx?id=' . $data["UUID"] . '&re=' . $data['EmisorRfc'] . '&rr=' . $data["ReceptorRfc"] . '&tt=' . $data['Total'] . '&fe=' . substr($data['NoCertificado'], -8);
-						$qr = QrCode::create($data_cbb);
-						$writer = new PngWriter();
-						if (!file_exists($filedir . "/" . $object->ref . '-' . $invoice->uuid . ".png")) {
-							$writer->write($qr)->saveToFile($filedir . "/" . $object->ref . '-' . $invoice->uuid . ".png");
-						}
 						$qr = file_get_contents($filedir . "/" . $object->ref . '-' . $invoice->uuid . ".png");
-
-						//show relationship
-						print '<tr class="liste_titre"><td class="titlefield" align="center" colspan="2">' . $langs->trans('dataFiscalRelationship') . '</td></tr>';
-
-						if ($invoice_relations) {
-							$num = count($invoice_relations) - 1;
-							for ($i = 0; $i <= $num; $i++) {
-								if ($invoice_relations[$i]['ref']) {
-									echo '<tr><td>' . $invoice_relations[$i]['ref'] .  '</td><td><span class="badge badge-status4 badge-status">' . strtoupper($invoice_relations[$i]['uuid']) . '</span> <span class="badge  badge-status2 badge-status">' . $invoice_relations[$i]['label'] .'</span></td></tr>';
-								}
-							}
-						}
-
 
 						// Verify if invoice is stamped
 						print '<tr class="liste_titre"><td class="titlefield" align="center" colspan="2">Información Fiscal</td></tr>';
-						print '<tr><td>UUID:</td><td><a href="' . $data_cbb . '" target="__blank">' . $data['UUID'] . '</a></td></tr>';
+						print '<tr><td>UUID:</td><td><a href="' . $data_cbb . '" target="__blank">' . $invoice->uuid . '</a></td></tr>';
 						print '<tr><td>Fecha de Emision:</td><td>' . $invoice->fecha_emision . '</td></tr>';
-						print '<tr><td>Fecha de Timbrado:</td><td>' . $data['FechaTimbrado'] . '</td></tr>';
-						print '<tr><td>QR</td><td align="left"><img width="100px" height="100px" src="data:image/png;base64,' . base64_encode($qr) . '"></td></tr>';
+						print '<tr><td>Fecha de Timbrado:</td><td>' . $invoice->fecha_timbrado . '</td></tr>';
+						$qr ? print '<tr><td>QR</td><td align="left"><img width="100px" height="100px" src="data:image/png;base64,' . base64_encode($qr) . '"></td></tr>' : '';
 
 						print '<script>$(document).ready(function(){
 							//$(".butActionDelete ").hide();
 						});</script>';
+
+
+						if ($invoice_relations) {
+							print '<tr class="liste_titre"><td class="titlefield" align="center" colspan="2">' . $langs->trans('dataFiscalRelationship') . '</td></tr>';
+							foreach ($invoice_relations as $invrel) {
+
+								echo $invrel['ref'] ? '<tr><td>' . $invrel['ref'] . '</td><td>' . $invrel['label'] . '<br>' .  $invrel['uuid'] . '&nbsp;</td></tr>' : '<tr><td>UUID Externo</td><td>' . $invrel['label'] . '<br>' .  $invrel['uuid'] . '</td></tr>';
+							}
+						}
+
+						print '<tr class="liste_titre"><td class="titlefield" align="center" colspan="2">' . $langs->trans('fiscalActions') . '</td></tr>';
+						print '<tr><td align="center" colspan="2"><a href="' . $_SERVER["PHP_SELF"] . '?facid=' . $object->id . '&action=status_stamp" class="butAction" style="background:#00549f;">Consultar Estado CFDI</a>';
+						if ($user->rights->cfdiutils->cancel) {
+							print '<a href="' . $_SERVER["PHP_SELF"] . '?facid=' . $object->id . '&action=cancel_stamp" class="butAction" style="background:#880000 !important">Solicitar Cancelación</a>';
+						}
+						print '</td></tr>';
 					}
 
 
+					//header('Location: ' . $_SERVER["PHP_SELF"] . '?facid=' . $object->id);
 
 					//Actions
 
@@ -925,9 +954,54 @@ class ActionsCfdiutils
 						}
 					}
 
+					//request status stamp
+					if ($action == "status_stamp") {
+
+						$result = $pactimbrado->consultar($expression);
+
+						$formquestion = array(
+							['type' => 'onecolumn', 'value' => '<span>Estatus:</span><span class="badge  badge-status1 badge-status">' . $result->ConsultaResult->CodigoEstatus . '</span>'],
+							['type' => 'onecolumn', 'value' => '<span>Es Cancelable:</span><span class="badge  badge-status1 badge-status">' . $result->ConsultaResult->EsCancelable . '</span>'],
+							['type' => 'onecolumn', 'value' => '<span>Estado:</span><span class="badge  badge-status1 badge-status">' . $result->ConsultaResult->Estado . '</span>'],
+							$result->ConsultaResult->EstatusCancelacion ? ['type' => 'onecolumn', 'value' => '<span>Estatus Cancelación:</span><span class="badge  badge-status1 badge-status">' . $result->ConsultaResult->EstatusCancelacion . '</span>'] : null,
+							$result->ConsultaResult->ValidacionEFOS ? ['type' => 'onecolumn', 'value' => '<span>Estatus:</span><span class="badge  badge-status1 badge-status">' . $result->ConsultaResult->ValidacionEFOS . '</span>'] : null,
+						);
+
+						$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"] . '?id=' . $object->id, $langs->trans('statusFiscalCFDI'), '', '', $formquestion, null, 1, 320, 600);
+						print $formconfirm;
+					}
+
+					//request cancel
+					if ($action == "cancel_stamp") {
+						if ($user->rights->cfdiutils->cancel) {
+							if ($invoice->uuid) {
+								$data_rel = $invoice->getDictionary('_tiporelacion');
+								$data = $invoice->getRelationship($object->socid);
+								if ($data) {
+
+									$formquestion = array(
+
+										'text' => '<h2>' . $langs->trans("stampCancel") . '</h2>',
+										['type' => 'select', 'name' => 'tiporelacion', 'id' => 'tiporelacion', 'label' => 'Tipo de relación', 'values' => $data_rel, 'tdclass' => 'fieldrequired'],
+										['type' => 'select', 'name' => 'factura_uuid', 'id' => 'factura_uuid', 'label' => 'Factura UUID', 'values' => $data],
+										['type' => 'onecolumn', 'value' => '**En caso de que el UUID se generara fuera del sistema, introducirlo a mano',],
+										['type' => 'text', 'name' => 'uuid_ext', 'id' => 'uuid_ext', 'label' => 'UUID Externo']
+									);
+
+									$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"] . '?id=' . $object->id, $langs->trans('stampCancel'), '', 'confirm_stampCancel', $formquestion, 0, 1, 320, 600);
+									print $formconfirm;
+
+									echo '<script>$(document).ready(function(){
+											$(".select2-container").css("width","20rem");
+										});</script>';
+								}
+							}
+						}
+					}
+
 					if ($action == "addrelation") {
 						if ($user->rights->cfdiutils->stamp) {
-							if (!$invoice->fecha_emision) {
+							if (!$invoice->fecha_emision || $invoice->error) {
 
 								$data_rel = $invoice->getDictionary('_tiporelacion');
 
@@ -954,6 +1028,8 @@ class ActionsCfdiutils
 											$(".select2-container").css("width","20rem");
 										});</script>';
 								}
+							} else {
+								setEventMessage('No se pueden añadir documentos relacionados<br>Ya se mandó a timbrar ' . $invoice->fecha_emision, 'errors');
 							}
 						}
 					}
@@ -983,12 +1059,6 @@ class ActionsCfdiutils
 				if ($object->status == Facture::STATUS_VALIDATED) {
 					if ($user->rights->cfdiutils->stamp) {
 						print '<a href="' . $_SERVER["PHP_SELF"] . '?facid=' . $object->id . '&action=stamp" class="butAction" style="background:#347733 !important">Timbrar SAT</a>';
-					}
-				}
-			} else {
-				if ($object->status == Facture::STATUS_VALIDATED) {
-					if ($user->rights->cfdiutils->cancel) {
-						print '<a href="' . $_SERVER["PHP_SELF"] . '?facid=' . $object->id . '&action=stamp" class="butAction" style="background:#880000 !important">Cancelar SAT</a>';
 					}
 				}
 			}
@@ -1060,13 +1130,37 @@ class ActionsCfdiutils
 			// echo '<pre>';var_dump($parameters['obj']);exit;
 			if ($parameters['obj']->uuid) {
 				echo '<td><span class="badge badge-status4 badge-status">' . $parameters['obj']->fecha_timbrado . '</span></td>';
-				echo '<td><span class="badge badge-status4 badge-status">' . strtoupper($parameters['obj']->uuid) . '</span></td>';
+				echo '<td><span class="badge badge-status4 badge-status">' . dol_strtoupper($parameters['obj']->uuid) . '</span></td>';
 			} else if ($parameters['obj']->fecha_emision && $parameters['obj']->fk_statut == Facture::STATUS_VALIDATED) {
 				echo '<td align="center"><span class="badge badge-status3 badge-status">E - ' . $parameters['obj']->fecha_emision . '</span></td>';
 				echo '<td align="center"><a class="butAction" href="' . DOL_URL_ROOT . '/compta/facture/card.php?facid=' . $parameters['obj']->id . '&action=stamp" target="__blank">Timbrar</td>';
 			} else {
 				echo '<td align="center"><span class="badge  badge-status3 badge-status">Sin Timbrar</span></td>';
 				echo '<td align="center"><a class="butAction" href="' . DOL_URL_ROOT . '/compta/facture/card.php?facid=' . $parameters['obj']->id . '" target="__blank">Ver Factura</td>';
+			}
+		}
+	}
+
+	/* Mail */
+	public function getFormMail($parameters, &$object, &$action, $hookmanager)
+	{
+		global $db, $conf;
+		if (in_array($parameters['currentcontext'], ['invoicecard'])) {
+			$id = explode('inv', $parameters['trackid']);
+			$invoice = new Cfdifacture($db);
+			$invoice->fetch($id[1]);
+			$invoice->getStamp();
+			$filename = dol_sanitizeFileName($invoice->ref);
+			$filedir = $conf->facture->multidir_output[$invoice->entity] . '/' . dol_sanitizeFileName($invoice->ref);
+
+
+			$file2 = $filedir . "/" . $filename . '-' . $invoice->uuid . ".pdf";
+			$file3 = $filedir . "/" . $filename . '-' . $invoice->uuid . ".xml";
+			if (file_exists($file3)) {
+				// $file6 = $fileparams . "/ADDENDA-" . $rs->uuid . ".xml";
+
+				$object->add_attached_files($file2, basename($file2), dol_mimetype($file2));
+				$object->add_attached_files($file3, basename($file3), dol_mimetype($file3));
 			}
 		}
 	}

@@ -13,28 +13,22 @@ class ComposerStaticInit8b6c7f97a570f54ac7f610d27380b6aa
     public static $prefixLengthsPsr4 = array (
         'X' => 
         array (
-            'XmlSchemaValidator\\' => 19,
             'XmlResourceRetriever\\' => 21,
         ),
         'S' => 
         array (
             'Symfony\\Polyfill\\Php80\\' => 23,
             'Symfony\\Component\\Process\\' => 26,
-            'Spipu\\Html2Pdf\\' => 15,
         ),
         'P' => 
         array (
             'PhpCfdi\\Credentials\\' => 20,
-            'PhpCfdi\\CfdiToPdf\\' => 18,
             'PhpCfdi\\CfdiCleaner\\' => 20,
-        ),
-        'L' => 
-        array (
-            'League\\Plates\\' => 14,
         ),
         'E' => 
         array (
             'Endroid\\QrCode\\' => 15,
+            'Eclipxe\\XmlSchemaValidator\\' => 27,
             'Eclipxe\\Enum\\' => 13,
         ),
         'D' => 
@@ -52,10 +46,6 @@ class ComposerStaticInit8b6c7f97a570f54ac7f610d27380b6aa
     );
 
     public static $prefixDirsPsr4 = array (
-        'XmlSchemaValidator\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/eclipxe/xmlschemavalidator/src/XmlSchemaValidator',
-        ),
         'XmlResourceRetriever\\' => 
         array (
             0 => __DIR__ . '/..' . '/eclipxe/xmlresourceretriever/src/XmlResourceRetriever',
@@ -68,29 +58,21 @@ class ComposerStaticInit8b6c7f97a570f54ac7f610d27380b6aa
         array (
             0 => __DIR__ . '/..' . '/symfony/process',
         ),
-        'Spipu\\Html2Pdf\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/spipu/html2pdf/src',
-        ),
         'PhpCfdi\\Credentials\\' => 
         array (
             0 => __DIR__ . '/..' . '/phpcfdi/credentials/src',
-        ),
-        'PhpCfdi\\CfdiToPdf\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/phpcfdi/cfditopdf/src',
         ),
         'PhpCfdi\\CfdiCleaner\\' => 
         array (
             0 => __DIR__ . '/..' . '/phpcfdi/cfdi-cleaner/src',
         ),
-        'League\\Plates\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/league/plates/src',
-        ),
         'Endroid\\QrCode\\' => 
         array (
             0 => __DIR__ . '/..' . '/endroid/qr-code/src',
+        ),
+        'Eclipxe\\XmlSchemaValidator\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/eclipxe/xmlschemavalidator/src',
         ),
         'Eclipxe\\Enum\\' => 
         array (
@@ -113,22 +95,8 @@ class ComposerStaticInit8b6c7f97a570f54ac7f610d27380b6aa
     public static $classMap = array (
         'Attribute' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/Attribute.php',
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
-        'Datamatrix' => __DIR__ . '/..' . '/tecnickcom/tcpdf/include/barcodes/datamatrix.php',
-        'PDF417' => __DIR__ . '/..' . '/tecnickcom/tcpdf/include/barcodes/pdf417.php',
         'PhpToken' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/PhpToken.php',
-        'QRcode' => __DIR__ . '/..' . '/tecnickcom/tcpdf/include/barcodes/qrcode.php',
         'Stringable' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/Stringable.php',
-        'TCPDF' => __DIR__ . '/..' . '/tecnickcom/tcpdf/tcpdf.php',
-        'TCPDF2DBarcode' => __DIR__ . '/..' . '/tecnickcom/tcpdf/tcpdf_barcodes_2d.php',
-        'TCPDFBarcode' => __DIR__ . '/..' . '/tecnickcom/tcpdf/tcpdf_barcodes_1d.php',
-        'TCPDF_COLORS' => __DIR__ . '/..' . '/tecnickcom/tcpdf/include/tcpdf_colors.php',
-        'TCPDF_FILTERS' => __DIR__ . '/..' . '/tecnickcom/tcpdf/include/tcpdf_filters.php',
-        'TCPDF_FONTS' => __DIR__ . '/..' . '/tecnickcom/tcpdf/include/tcpdf_fonts.php',
-        'TCPDF_FONT_DATA' => __DIR__ . '/..' . '/tecnickcom/tcpdf/include/tcpdf_font_data.php',
-        'TCPDF_IMAGES' => __DIR__ . '/..' . '/tecnickcom/tcpdf/include/tcpdf_images.php',
-        'TCPDF_IMPORT' => __DIR__ . '/..' . '/tecnickcom/tcpdf/tcpdf_import.php',
-        'TCPDF_PARSER' => __DIR__ . '/..' . '/tecnickcom/tcpdf/tcpdf_parser.php',
-        'TCPDF_STATIC' => __DIR__ . '/..' . '/tecnickcom/tcpdf/include/tcpdf_static.php',
         'UnhandledMatchError' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/UnhandledMatchError.php',
         'ValueError' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/ValueError.php',
     );

@@ -68,3 +68,5 @@ SetupPaytypeSAT=Configuracón formas de pago SAT
 SavePac= Guardar Pac
 dataFiscalRelationship= Documentos relacionados
 adddataFiscalRelationship = Añadir documentos relacionados
+fiscalActions = Acciones Fiscales
+statusFiscalCFDI= Estado del CFDI

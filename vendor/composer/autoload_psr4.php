@@ -6,16 +6,13 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
-    'XmlSchemaValidator\\' => array($vendorDir . '/eclipxe/xmlschemavalidator/src/XmlSchemaValidator'),
     'XmlResourceRetriever\\' => array($vendorDir . '/eclipxe/xmlresourceretriever/src/XmlResourceRetriever'),
     'Symfony\\Polyfill\\Php80\\' => array($vendorDir . '/symfony/polyfill-php80'),
     'Symfony\\Component\\Process\\' => array($vendorDir . '/symfony/process'),
-    'Spipu\\Html2Pdf\\' => array($vendorDir . '/spipu/html2pdf/src'),
     'PhpCfdi\\Credentials\\' => array($vendorDir . '/phpcfdi/credentials/src'),
-    'PhpCfdi\\CfdiToPdf\\' => array($vendorDir . '/phpcfdi/cfditopdf/src'),
     'PhpCfdi\\CfdiCleaner\\' => array($vendorDir . '/phpcfdi/cfdi-cleaner/src'),
-    'League\\Plates\\' => array($vendorDir . '/league/plates/src'),
     'Endroid\\QrCode\\' => array($vendorDir . '/endroid/qr-code/src'),
+    'Eclipxe\\XmlSchemaValidator\\' => array($vendorDir . '/eclipxe/xmlschemavalidator/src'),
     'Eclipxe\\Enum\\' => array($vendorDir . '/eclipxe/enum/src'),
     'DASPRiD\\Enum\\' => array($vendorDir . '/dasprid/enum/src'),
     'CfdiUtils\\' => array($vendorDir . '/eclipxe/cfdiutils/src/CfdiUtils'),

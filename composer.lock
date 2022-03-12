@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "06dcfee2812dfc502715cefe1be452fa",
+    "content-hash": "fed97336431da8b61f38f763795865de",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -109,21 +109,21 @@
         },
         {
             "name": "eclipxe/cfdiutils",
-            "version": "v2.20.0",
+            "version": "v2.20.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/eclipxe13/CfdiUtils.git",
-                "reference": "12eb407c1d663a66c17793abed545da9a1ba4a75"
+                "reference": "5d569fccfbf2ed449633a2fc6cb482a970fc4046"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/eclipxe13/CfdiUtils/zipball/12eb407c1d663a66c17793abed545da9a1ba4a75",
-                "reference": "12eb407c1d663a66c17793abed545da9a1ba4a75",
+                "url": "https://api.github.com/repos/eclipxe13/CfdiUtils/zipball/5d569fccfbf2ed449633a2fc6cb482a970fc4046",
+                "reference": "5d569fccfbf2ed449633a2fc6cb482a970fc4046",
                 "shasum": ""
             },
             "require": {
                 "eclipxe/xmlresourceretriever": "^1.3.0",
-                "eclipxe/xmlschemavalidator": "^2.0.2",
+                "eclipxe/xmlschemavalidator": "^3.0.2",
                 "ext-dom": "*",
                 "ext-iconv": "*",
                 "ext-json": "*",
@@ -134,7 +134,7 @@
                 "ext-soap": "*",
                 "ext-xsl": "*",
                 "php": ">=7.3",
-                "symfony/process": "^3.4|^4.2|^5.0"
+                "symfony/process": "^3.4|^4.2|^5.0|^6.0"
             },
             "require-dev": {
                 "friendsofphp/php-cs-fixer": "^3.0",
@@ -178,7 +178,7 @@
                 "issues": "https://github.com/eclipxe13/CfdiUtils/issues",
                 "source": "https://github.com/eclipxe13/CfdiUtils"
             },
-            "time": "2022-02-23T03:15:25+00:00"
+            "time": "2022-03-08T23:18:49+00:00"
         },
         {
             "name": "eclipxe/enum",
@@ -284,34 +284,30 @@
         },
         {
             "name": "eclipxe/xmlschemavalidator",
-            "version": "v2.1.2",
+            "version": "v3.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/eclipxe13/XmlSchemaValidator.git",
-                "reference": "add283790d140e485b5f3dc14d2ce6c7d944277d"
+                "reference": "85931d6a242c5b562f82220945fc25a01afba3f5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/eclipxe13/XmlSchemaValidator/zipball/add283790d140e485b5f3dc14d2ce6c7d944277d",
-                "reference": "add283790d140e485b5f3dc14d2ce6c7d944277d",
+                "url": "https://api.github.com/repos/eclipxe13/XmlSchemaValidator/zipball/85931d6a242c5b562f82220945fc25a01afba3f5",
+                "reference": "85931d6a242c5b562f82220945fc25a01afba3f5",
                 "shasum": ""
             },
             "require": {
                 "ext-dom": "*",
                 "ext-libxml": "*",
-                "php": ">=7.0"
+                "php": ">=7.3"
             },
             "require-dev": {
-                "friendsofphp/php-cs-fixer": "^2.4",
-                "phpstan/phpstan": "^0.9|^0.10|^0.11",
-                "phpunit/phpunit": "^6.2|^7.3",
-                "squizlabs/php_codesniffer": "^3.0",
-                "vimeo/psalm": "^3.2"
+                "phpunit/phpunit": "^9.5.5"
             },
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "XmlSchemaValidator\\": "src/XmlSchemaValidator/"
+                    "Eclipxe\\XmlSchemaValidator\\": "src/"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -321,7 +317,8 @@
             "authors": [
                 {
                     "name": "Carlos C Soto",
-                    "email": "eclipxe13@gmail.com"
+                    "email": "eclipxe13@gmail.com",
+                    "homepage": "https://eclipxe.com.mx/"
                 }
             ],
             "description": "PHP Library for XML Schema Validations",
@@ -334,9 +331,9 @@
             ],
             "support": {
                 "issues": "https://github.com/eclipxe13/XmlSchemaValidator/issues",
-                "source": "https://github.com/eclipxe13/XmlSchemaValidator/tree/master"
+                "source": "https://github.com/eclipxe13/XmlSchemaValidator"
             },
-            "time": "2020-04-05T18:20:44+00:00"
+            "time": "2022-03-08T18:51:17+00:00"
         },
         {
             "name": "endroid/qr-code",
@@ -411,70 +408,6 @@
             "time": "2022-01-05T21:27:44+00:00"
         },
         {
-            "name": "league/plates",
-            "version": "v3.4.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/thephpleague/plates.git",
-                "reference": "6d3ee31199b536a4e003b34a356ca20f6f75496a"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/thephpleague/plates/zipball/6d3ee31199b536a4e003b34a356ca20f6f75496a",
-                "reference": "6d3ee31199b536a4e003b34a356ca20f6f75496a",
-                "shasum": ""
-            },
-            "require": {
-                "php": "^7.0|^8.0"
-            },
-            "require-dev": {
-                "mikey179/vfsstream": "^1.6",
-                "phpunit/phpunit": "^9.5",
-                "squizlabs/php_codesniffer": "^3.5"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "3.0-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "League\\Plates\\": "src"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Jonathan Reinink",
-                    "email": "jonathan@reinink.ca",
-                    "role": "Developer"
-                },
-                {
-                    "name": "RJ Garcia",
-                    "email": "ragboyjr@icloud.com",
-                    "role": "Developer"
-                }
-            ],
-            "description": "Plates, the native PHP template system that's fast, easy to use and easy to extend.",
-            "homepage": "https://platesphp.com",
-            "keywords": [
-                "league",
-                "package",
-                "templates",
-                "templating",
-                "views"
-            ],
-            "support": {
-                "issues": "https://github.com/thephpleague/plates/issues",
-                "source": "https://github.com/thephpleague/plates/tree/v3.4.0"
-            },
-            "time": "2020-12-25T05:00:37+00:00"
-        },
-        {
             "name": "phpcfdi/cfdi-cleaner",
             "version": "v1.2.0",
             "source": {
@@ -526,82 +459,6 @@
                 "source": "https://github.com/phpcfdi/cfdi-cleaner/tree/v1.2.0"
             },
             "time": "2022-03-04T15:34:26+00:00"
-        },
-        {
-            "name": "phpcfdi/cfditopdf",
-            "version": "v0.3.4",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/phpcfdi/cfditopdf.git",
-                "reference": "2fda6ba32bdb0fdb637574e35e078fd68ead5b3f"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/phpcfdi/cfditopdf/zipball/2fda6ba32bdb0fdb637574e35e078fd68ead5b3f",
-                "reference": "2fda6ba32bdb0fdb637574e35e078fd68ead5b3f",
-                "shasum": ""
-            },
-            "require": {
-                "eclipxe/cfdiutils": "^2.11.0",
-                "league/plates": "^3.3",
-                "php": ">=7.0",
-                "spipu/html2pdf": "^5.1"
-            },
-            "require-dev": {
-                "friendsofphp/php-cs-fixer": "^2.4",
-                "phpstan/phpstan": "^0.9|^0.10|^0.11|^0.12",
-                "phpunit/phpunit": "^6.5|^7.0",
-                "squizlabs/php_codesniffer": "^3.0"
-            },
-            "bin": [
-                "bin/cfditopdf"
-            ],
-            "type": "library",
-            "extra": {
-                "phar-builder": {
-                    "compression": "GZip",
-                    "name": "cfditopdf.phar",
-                    "output-dir": "build/",
-                    "entry-point": "bin/cfditopdf",
-                    "include": [
-                        "bin",
-                        "src",
-                        "templates"
-                    ],
-                    "include-dev": false,
-                    "skip-shebang": false
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "PhpCfdi\\CfdiToPdf\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Carlos C Soto",
-                    "email": "eclipxe13@gmail.com",
-                    "homepage": "http://eclipxe.com.mx/"
-                }
-            ],
-            "description": "Create a generic PDF file from a CFDI 3.3 (CLI included)",
-            "homepage": "https://github.com/phpcfdi/cfditopdf",
-            "keywords": [
-                "cfdi",
-                "factura",
-                "invoice",
-                "mexico",
-                "pdf"
-            ],
-            "support": {
-                "issues": "https://github.com/phpcfdi/cfditopdf/issues",
-                "source": "https://github.com/phpcfdi/cfditopdf"
-            },
-            "time": "2021-01-21T06:29:11+00:00"
         },
         {
             "name": "phpcfdi/credentials",
@@ -658,64 +515,6 @@
                 "source": "https://github.com/phpcfdi/credentials"
             },
             "time": "2022-02-01T03:11:00+00:00"
-        },
-        {
-            "name": "spipu/html2pdf",
-            "version": "v5.2.4",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/spipu/html2pdf.git",
-                "reference": "dcb5671cac3d60ff486cf16df389e3bd0dc16ba4"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/spipu/html2pdf/zipball/dcb5671cac3d60ff486cf16df389e3bd0dc16ba4",
-                "reference": "dcb5671cac3d60ff486cf16df389e3bd0dc16ba4",
-                "shasum": ""
-            },
-            "require": {
-                "ext-gd": "*",
-                "ext-mbstring": "*",
-                "php": "^5.6 || ^7.0 || ^8.0",
-                "tecnickcom/tcpdf": "^6.3"
-            },
-            "require-dev": {
-                "phake/phake": "^2.0",
-                "phpunit/phpunit": "^5.0"
-            },
-            "suggest": {
-                "ext-gd": "Allows to embed images into the PDF",
-                "fagundes/zff-html2pdf": "if you need to integrate Html2Pdf with Zend Framework 2 (zf2)"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Spipu\\Html2Pdf\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "OSL-3.0"
-            ],
-            "authors": [
-                {
-                    "name": "Spipu",
-                    "homepage": "https://github.com/spipu",
-                    "role": "Developer"
-                }
-            ],
-            "description": "Html2Pdf is a HTML to PDF converter written in PHP5 (it uses TCPDF). OFFICIAL PACKAGE",
-            "homepage": "http://html2pdf.fr/",
-            "keywords": [
-                "html",
-                "html2pdf",
-                "pdf"
-            ],
-            "support": {
-                "issues": "https://github.com/spipu/html2pdf/issues",
-                "source": "https://github.com/spipu/html2pdf/tree/v5.2.4"
-            },
-            "time": "2021-12-16T15:23:31+00:00"
         },
         {
             "name": "symfony/polyfill-php80",
@@ -861,78 +660,6 @@
                 }
             ],
             "time": "2022-01-30T18:16:22+00:00"
-        },
-        {
-            "name": "tecnickcom/tcpdf",
-            "version": "6.4.4",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/tecnickcom/TCPDF.git",
-                "reference": "42cd0f9786af7e5db4fcedaa66f717b0d0032320"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/tecnickcom/TCPDF/zipball/42cd0f9786af7e5db4fcedaa66f717b0d0032320",
-                "reference": "42cd0f9786af7e5db4fcedaa66f717b0d0032320",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=5.3.0"
-            },
-            "type": "library",
-            "autoload": {
-                "classmap": [
-                    "config",
-                    "include",
-                    "tcpdf.php",
-                    "tcpdf_parser.php",
-                    "tcpdf_import.php",
-                    "tcpdf_barcodes_1d.php",
-                    "tcpdf_barcodes_2d.php",
-                    "include/tcpdf_colors.php",
-                    "include/tcpdf_filters.php",
-                    "include/tcpdf_font_data.php",
-                    "include/tcpdf_fonts.php",
-                    "include/tcpdf_images.php",
-                    "include/tcpdf_static.php",
-                    "include/barcodes/datamatrix.php",
-                    "include/barcodes/pdf417.php",
-                    "include/barcodes/qrcode.php"
-                ]
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "LGPL-3.0-only"
-            ],
-            "authors": [
-                {
-                    "name": "Nicola Asuni",
-                    "email": "info@tecnick.com",
-                    "role": "lead"
-                }
-            ],
-            "description": "TCPDF is a PHP class for generating PDF documents and barcodes.",
-            "homepage": "http://www.tcpdf.org/",
-            "keywords": [
-                "PDFD32000-2008",
-                "TCPDF",
-                "barcodes",
-                "datamatrix",
-                "pdf",
-                "pdf417",
-                "qrcode"
-            ],
-            "support": {
-                "issues": "https://github.com/tecnickcom/TCPDF/issues",
-                "source": "https://github.com/tecnickcom/TCPDF/tree/6.4.4"
-            },
-            "funding": [
-                {
-                    "url": "https://www.paypal.com/cgi-bin/webscr?cmd=_donations&currency_code=GBP&business=paypal@tecnick.com&item_name=donation%20for%20tcpdf%20project",
-                    "type": "custom"
-                }
-            ],
-            "time": "2021-12-31T08:39:24+00:00"
         }
     ],
     "packages-dev": [],

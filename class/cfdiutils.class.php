@@ -43,12 +43,11 @@ class Cfdiutils
 	 *
 	 *	@param	int 	$id		ID Object facture
 	 */
-	public function stampXML($header, $emisor, $receptor, $conceptos)
+	public function stampXML($header, $emisor, $receptor, $conceptos, $relacionados = null)
 	{
 		global $conf;
-		//Get CSD
-		// $classname = ucfirst($this->pac);
-		// $pac = new $classname;
+
+		//test
 
 		$sql = "SELECT type,value from " . MAIN_DB_PREFIX . "cfdiutils_conf where entity =" . $conf->entity;
 		$resql = $this->db->query($sql);
@@ -88,10 +87,29 @@ class Cfdiutils
 		$comprobante->addReceptor($receptor);
 
 		$num = count($conceptos) - 1;
-		for ($i = 0; $i < $num; $i++) {
-			$comprobante->addConcepto($conceptos[$i])->addTraslado($conceptos['Traslado'][$i]);
+		if ($num > 0) {
+			for ($i = 0; $i < $num; $i++) {
+				$comprobante->addConcepto($conceptos[$i])->addTraslado($conceptos['Traslado'][$i]);
+			}
+		} else {
+			$comprobante->addConcepto($conceptos[0])->addTraslado($conceptos['Traslado'][0]);
 		}
 
+		//Add cfdi relacionados
+		if (is_array($relacionados)) {
+			$code = null;
+			$group = null;
+			foreach ($relacionados as $rel) {
+
+				if (!$code || $code != $rel['code']) {
+					$group = $comprobante->addCfdiRelacionados(['TipoRelacion' => $rel['code']]);
+					$group->addCfdiRelacionado(['UUID' => $rel['uuid']]);
+				} else {
+					$group->addCfdiRelacionado(['UUID' => $rel['uuid']]);
+				}
+				$code = $rel['code'];
+			}
+		}
 		// método de ayuda para establecer las sumas del comprobante e impuestos
 		// con base en la suma de los conceptos y la agrupación de sus impuestos
 		$creator->addSumasConceptos(null, 2);

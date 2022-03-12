@@ -42,6 +42,7 @@ class Cfdifacture extends Facture
 	public $cer_sat;
 	public $uuid;
 	public $error;
+	public $pac;
 
 	public $fields = array(
 		'rowid' => array('type' => 'integer', 'label' => 'TechnicalID', 'enabled' => 1, 'visible' => -1, 'notnull' => 1, 'position' => 10),
@@ -57,6 +58,7 @@ class Cfdifacture extends Facture
 		'cer_sat' => array('type' => 'varchar(50)', 'label' => 'Cersat', 'enabled' => 1, 'visible' => -1, 'position' => 50),
 		'uuid' => array('type' => 'varchar(50)', 'label' => 'Uuid', 'enabled' => 1, 'visible' => -1, 'position' => 55),
 		'error' => array('type' => 'varchar(255)', 'label' => 'error', 'enabled' => 1, 'visible' => -1, 'position' => 60),
+		'pac' => array('type' => 'varchar(50)', 'label' => 'pac', 'enabled' => 1, 'visible' => -1, 'position' => 65),
 	);
 
 
@@ -105,6 +107,12 @@ class Cfdifacture extends Facture
 			$this->error = 'Failexportacion';
 		}
 
+		if (!empty($this->pac)) {
+			$this->pac = dol_string_nospecial(trim($this->pac));
+		} else {
+			$error++;
+			$this->error = 'Failpac';
+		}
 		$this->forma_pago = $this->__getFormaPago($this->forma_pago);
 
 
@@ -122,6 +130,7 @@ class Cfdifacture extends Facture
 				$sql .= ",metodo_pago";
 				$sql .= ",fecha_emision";
 				$sql .= ",exportacion";
+				$sql .= ",pac";
 				$sql .= ") VALUES (";
 				$sql .= $this->fk_facture;
 				$sql .= ",'" . $this->usocfdi . "'";
@@ -130,6 +139,7 @@ class Cfdifacture extends Facture
 				$sql .= ",'" . $this->metodo_pago . "'";
 				$sql .= ",'" . $this->fecha_emision . "'";
 				$sql .= ",'" . $this->exportacion . "'";
+				$sql .= ",'" . $this->pac . "'";
 				$sql .= ")";
 
 				dol_syslog(get_class($this) . "::Create", LOG_DEBUG);
@@ -174,6 +184,7 @@ class Cfdifacture extends Facture
 		$sql .= $this->forma_pago ? ",forma_pago = '" . $this->forma_pago . "'" : '';
 		$sql .= $this->metodo_pago ? ",metodo_pago = '" . $this->metodo_pago . "'" : '';
 		$sql .= $this->exportacion ? ",exportacion = '" . $this->exportacion . "'" : '';
+		$sql .= $this->pac ? ",pac = '" . $this->pac . "'" : '';
 		$sql .= " Where fk_facture = " . $this->fk_facture;
 
 		$this->db->begin();
@@ -197,7 +208,7 @@ class Cfdifacture extends Facture
 	public function getStamp()
 	{
 		$this->fk_facture = $this->id;
-		$sql = "SELECT  usocfdi,condicion_pago,forma_pago,metodo_pago,exportacion,fecha_emision,fecha_timbrado,cer_csd,cer_sat,uuid,error";
+		$sql = "SELECT  usocfdi,condicion_pago,forma_pago,metodo_pago,exportacion,fecha_emision,fecha_timbrado,cer_csd,cer_sat,uuid,error,pac";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "cfdiutils_facture WHERE fk_facture = " . $this->fk_facture;
 		$resql = $this->db->query($sql);
 		if ($resql) {
@@ -217,6 +228,7 @@ class Cfdifacture extends Facture
 				$this->cer_sat = $obj->cer_sat;
 				$this->uuid = $obj->uuid;
 				$this->error = $obj->error;
+				$this->pac = $obj->pac;
 			}
 		}
 	}
@@ -401,7 +413,7 @@ class Cfdifacture extends Facture
 		$sql = "SELECT f.rowid as id,cfdi.uuid as uuid, concat(f.ref, ' - ', cfdi.uuid) as ref FROM " . MAIN_DB_PREFIX . "cfdiutils_facture cfdi";
 		$sql .= " INNER JOIN " . MAIN_DB_PREFIX . "facture f on f.rowid = cfdi.fk_facture";
 		$sql .= " INNER JOIN " . MAIN_DB_PREFIX . "societe s on s.rowid = f.fk_soc";
-		$sql .= " WHERE s.rowid = " . $socid;
+		$sql .= " WHERE s.rowid = " . $socid . " AND cfdi.uuid IS NOT NULL  AND cfdi.uuid <> ''";
 
 		$resql = $this->db->query($sql);
 		if ($resql) {
@@ -421,28 +433,30 @@ class Cfdifacture extends Facture
 		return 0;
 	}
 
-	public function createRelationship($fk_rel, $fk_facture = null, $extuuid = null)
+	public function createRelationship($fk_tipo_rel, $fk_facture_rel = null, $extuuid = null)
 	{
 
 		$this->fk_facture = $this->id;
 		$error = 0;
-		if ($fk_facture) {
+		if ($fk_facture_rel) {
 			$extuuid = null;
 		}
 		if ($extuuid) {
-			$fk_facture = null;
+			$fk_facture_rel = null;
 		}
 
 
 		$this->db->begin();
 
 		$sql = "INSERT INTO " . MAIN_DB_PREFIX . "cfdiutils_facture_rel (";
-		$sql .= "fk_rel";
-		$sql .= $fk_facture ? ",fk_facture" : '';
+		$sql .= "fk_facture";
+		$sql .= ",fk_tipo_rel";
+		$sql .= $fk_facture_rel ? ",fk_facture_rel" : '';
 		$sql .= $extuuid ? ",extuuid" : '';
 		$sql .= ") VALUES(";
-		$sql .= $fk_rel;
-		$sql .= $fk_facture ? "," . $fk_facture . "" : '';
+		$sql .= $this->fk_facture;
+		$sql .= "," . $fk_tipo_rel;
+		$sql .= $fk_facture_rel ? "," . $fk_facture_rel . "" : '';
 		$sql .= $extuuid ? ", '" . $extuuid . "'" : '';
 		$sql .= ")";
 
@@ -455,23 +469,11 @@ class Cfdifacture extends Facture
 		}
 
 		if (!$error) {
-			$id = $this->db->last_insert_id(MAIN_DB_PREFIX . 'cfdiutils_facture_rel', 'rowid');
-			$this->db->commit();
-			$this->db->begin();
-			$sql = "INSERT INTO " . MAIN_DB_PREFIX . "cfdiutils_facture_rel_piv(fk_facture,fk_facture_rel)";
-			$sql .= " VALUES (" . $this->fk_facture . "," . $id . ")";
-			dol_syslog(get_class($this) . "::Create Facture Relationship Pivo", LOG_DEBUG);
-			$result = $this->db->query($sql);
-			if (!$result) {
-				$error++;
-				$this->error = $this->db->lasterror();
-			}
-			if (!$error) {
-				$this->db->commit();
 
-				return 'InsertSuccess';
-			}
+			$this->db->commit();
+			return 'InsertSuccess';
 		} else {
+
 			$this->db->rollback();
 			return -$error;
 		}
@@ -482,12 +484,9 @@ class Cfdifacture extends Facture
 		$this->fk_facture = $this->id;
 		$datatable = [];
 
-		$sql = "SELECT f.ref as ref , cfdi.uuid as uuid, tr.label as label FROM " . MAIN_DB_PREFIX . "cfdiutils_facture_rel_piv frp";
-		$sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "cfdiutils_facture_rel fr ON (frp.fk_facture_rel = fr.rowid)";
-		$sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "c_cfdiutils_tiporelacion tr ON (tr.rowid = fr.fk_rel)";
-		$sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "facture f ON (f.rowid = frp.fk_facture)";
-		$sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "cfdiutils_facture cfdi ON (fr.fk_facture = cfdi.fk_facture)";
-		$sql .= " WHERE frp.fk_facture = " . $this->fk_facture;
+		$sql = "SELECT fr.rowid as id, fr.extuuid as uuid, fr.fk_facture_rel, tr.label as label,tr.code as code FROM " . MAIN_DB_PREFIX . "cfdiutils_facture_rel fr";
+		$sql .= " INNER JOIN " . MAIN_DB_PREFIX . "c_cfdiutils_tiporelacion tr ON fr.fk_tipo_rel = tr.rowid";
+		$sql .= " WHERE fr.fk_facture = " . $this->fk_facture;
 
 		$resql = $this->db->query($sql);
 		$num = $this->db->num_rows($resql);
@@ -496,40 +495,44 @@ class Cfdifacture extends Facture
 			$i = 0;
 			while ($i < $num) {
 				$obj = $this->db->fetch_object($resql);
-				$datatable[$i] = [
-					'ref' => $obj->ref,
-					'uuid' => $obj->uuid,
-					'label' => $obj->label
-				];
+
+				if ($obj->uuid) {
+
+					$datatable[$i] = [
+						'id' => $obj->id,
+						'ref' => null,
+						'uuid' => $obj->uuid,
+						'label' => $obj->label,
+						'code' => $obj->code,
+					];
+				} else {
+
+					$facture = new Cfdifacture($this->db);
+					$facture->fetch($obj->fk_facture_rel);
+					$facture->getStamp();
+					$datatable[$i] = [
+						'id' => $obj->id,
+						'ref' => $facture->ref,
+						'uuid' => $facture->uuid,
+						'label' => $obj->label,
+						'code' => $obj->code,
+					];
+				}
+
 				$i++;
 			}
-
 			return $datatable;
-		} else {
 
-			$sql = "SELECT fr.uuid as uuid, tr.label as label FROM " . MAIN_DB_PREFIX . "cfdiutils_facture_rel_piv frp";
-			$sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "cfdiutils_facture_rel fr ON (frp.fk_facture_rel = fr.rowid)";
-			$sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "c_cfdiutils_tiporelacion tr ON (tr.rowid = fr.fk_rel)";
-			$sql .= " WHERE frp.fk_facture = " . $this->fk_facture;
-			$resql = $this->db->query($sql);
-			$num = $this->db->num_rows($resql);
-			if ($num > 0) {
-				$i = 0;
-				while ($i < $num) {
-					$obj = $this->db->fetch_object($resql);
-					$datatable[$i] =
-						[
-							'ref' => null,
-							'uuid' => $obj->uuid,
-							'label' => $obj->label
-						];
-					$i++;
-				}
-				return $datatable;
-			} else {
-				return 0;
-			}
+		} else {
+			return 0;
 		}
+	}
+
+	public function deleteRel($id)
+	{
+		$sql = "DELETE FROM ".MAIN_DB_PREFIX."cfdiutils_facture_rel WHERE rowid = ".$id;
+		$result = $this->db->query($sql);
+		return $result;
 	}
 	//Get Dictionary
 	public function getDictionary($table)

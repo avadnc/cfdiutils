@@ -28,8 +28,12 @@ composer require eclipxe/xmlschemavalidator
 
 ```php
 <?php
+declare(strict_types=1);
+
+use Eclipxe\XmlSchemaValidator\SchemaValidator;
+
 $contents = file_get_contents('example.xml');
-$validator = new \XmlSchemaValidator\SchemaValidator($contents);
+$validator = SchemaValidator::createFromString($contents);
 if (! $validator->validate()) {
     echo 'Found error: ' . $validator->getLastError();
 }
@@ -39,29 +43,34 @@ if (! $validator->validate()) {
 
 ```php
 <?php
-// create SchemaValidator using a DOMDocument
-$document = new \DOMDocument();
-$document->load('example.xml');
-$validator = new \XmlSchemaValidator\SchemaValidator($document);
+declare(strict_types=1);
 
-// change schemas collection to override the schema location of an specific namespace
+use Eclipxe\XmlSchemaValidator\SchemaValidator;
+use Eclipxe\XmlSchemaValidator\Exceptions\ValidationFailException;
+
+// create SchemaValidator using a DOMDocument
+$document = new DOMDocument();
+$document->load('example.xml');
+$validator = new SchemaValidator($document);
+
+// change schemas collection to override the schema location of a specific namespace
 $schemas = $validator->buildSchemas();
 $schemas->create('http://example.org/schemas/x1', './local-schemas/x1.xsd');
 
 // validateWithSchemas does not return boolean, it throws an exception
 try {
     $validator->validateWithSchemas($schemas);
-} catch (\XmlSchemaValidator\SchemaValidatorException $ex) {
+} catch (ValidationFailException $ex) {
     echo 'Found error: ' . $ex->getMessage();
 }
 ```
 
-## About libxml errors
+## Exceptions
 
-This library depends on PHP libxml and uses internal errors `libxml_use_internal_errors` to retrieve
-the errors when creates the `DOMDocument` or validate against the schema files.
-Instead of raise an error it creates a `LibXmlException` with the errors chained.
-It also restore the value of `libxml_use_internal_errors` after execution.
+This library creates its own specific exceptions and all of them implements `XmlSchemaValidatorException`.
+Check the [exceptions' documentation](docs/Exceptions.md) for more information.
+
+When this library uses LibXML functions, it captures the errors and throw its own exception.
 
 ## Version 1.x is deprecated
 
@@ -72,10 +81,12 @@ Validate an XML file against its multiple XSD files, it does not matter where ar
 
 ## Version 2.x is deprecated
 
+[Migration changes between version 2 and version 3](docs/UPGRADE-v2-v3.md)
+
 Version 2.x was compatible with PHP 7 and was deprecated on 2020-04-05.
 
 A branch `2.x` has been created, it might be installable using `composer require eclipxe/xmlschemavalidator:2.x-dev`,
-but it will not be active maintained and you should change your dependency as soon as possible.
+but it will not be active maintained. You should change your dependency as soon as possible.
 
 ## Contributing
 
@@ -87,22 +98,22 @@ and don't forget to take a look in the [TODO][] and [CHANGELOG][] files.
 The `eclipxe/XmlSchemaValidator` library is copyright © [Carlos C Soto](https://eclipxe.com.mx/)
 and licensed for use under the MIT License (MIT). Please see [LICENSE][] for more information.
 
-[contributing]: https://github.com/eclipxe13/XmlSchemaValidator/blob/master/CONTRIBUTING.md
-[changelog]: https://github.com/eclipxe13/XmlSchemaValidator/blob/master/CHANGELOG.md
-[todo]: https://github.com/eclipxe13/XmlSchemaValidator/blob/master/TODO.md
+[contributing]: https://github.com/eclipxe13/XmlSchemaValidator/blob/main/CONTRIBUTING.md
+[changelog]: https://github.com/eclipxe13/XmlSchemaValidator/blob/main/docs/CHANGELOG.md
+[todo]: https://github.com/eclipxe13/XmlSchemaValidator/blob/main/docs/TODO.md
 
 [source]: https://github.com/eclipxe13/XmlSchemaValidator
 [release]: https://github.com/eclipxe13/XmlSchemaValidator/releases
-[license]: https://github.com/eclipxe13/XmlSchemaValidator/blob/master/LICENSE
-[build]: https://travis-ci.com/eclipxe13/XmlSchemaValidator?branch=master
+[license]: https://github.com/eclipxe13/XmlSchemaValidator/blob/main/LICENSE
+[build]: https://github.com/eclipxe13/XmlSchemaValidator/actions/workflows/build.yml?query=branch:main
 [quality]: https://scrutinizer-ci.com/g/eclipxe13/XmlSchemaValidator/
-[coverage]: https://scrutinizer-ci.com/g/eclipxe13/XmlSchemaValidator/code-structure/master
+[coverage]: https://scrutinizer-ci.com/g/eclipxe13/XmlSchemaValidator/code-structure/main
 [downloads]: https://packagist.org/packages/eclipxe/xmlschemavalidator
 
 [badge-source]: https://img.shields.io/badge/source-eclipxe13/XmlSchemaValidator-blue.svg?style=flat-square
 [badge-release]: https://img.shields.io/github/release/eclipxe13/XmlSchemaValidator.svg?style=flat-square
 [badge-license]: https://img.shields.io/github/license/eclipxe13/XmlSchemaValidator.svg?style=flat-square
-[badge-build]: https://img.shields.io/travis/com/eclipxe13/XmlSchemaValidator/master.svg?style=flat-square
-[badge-quality]: https://img.shields.io/scrutinizer/g/eclipxe13/XmlSchemaValidator/master.svg?style=flat-square
-[badge-coverage]: https://img.shields.io/scrutinizer/coverage/g/eclipxe13/XmlSchemaValidator/master.svg?style=flat-square
+[badge-build]: https://img.shields.io/github/workflow/status/eclipxe13/XmlSchemaValidator/build/main?style=flat-square
+[badge-quality]: https://img.shields.io/scrutinizer/g/eclipxe13/XmlSchemaValidator/main.svg?style=flat-square
+[badge-coverage]: https://img.shields.io/scrutinizer/coverage/g/eclipxe13/XmlSchemaValidator/main.svg?style=flat-square
 [badge-downloads]: https://img.shields.io/packagist/dt/eclipxe/xmlschemavalidator.svg?style=flat-square

@@ -30,7 +30,7 @@ private static $installed = array (
     'aliases' => 
     array (
     ),
-    'reference' => '2f18dd7076608c1093a9ce816fc980d65f10a991',
+    'reference' => 'd6f896850f4b8ffb344a8f1bdb3960f5bf264e1b',
     'name' => '__root__',
   ),
   'versions' => 
@@ -42,7 +42,7 @@ private static $installed = array (
       'aliases' => 
       array (
       ),
-      'reference' => '2f18dd7076608c1093a9ce816fc980d65f10a991',
+      'reference' => 'd6f896850f4b8ffb344a8f1bdb3960f5bf264e1b',
     ),
     'bacon/bacon-qr-code' => 
     array (
@@ -64,12 +64,12 @@ private static $installed = array (
     ),
     'eclipxe/cfdiutils' => 
     array (
-      'pretty_version' => 'v2.20.0',
-      'version' => '2.20.0.0',
+      'pretty_version' => 'v2.20.1',
+      'version' => '2.20.1.0',
       'aliases' => 
       array (
       ),
-      'reference' => '12eb407c1d663a66c17793abed545da9a1ba4a75',
+      'reference' => '5d569fccfbf2ed449633a2fc6cb482a970fc4046',
     ),
     'eclipxe/enum' => 
     array (
@@ -91,12 +91,12 @@ private static $installed = array (
     ),
     'eclipxe/xmlschemavalidator' => 
     array (
-      'pretty_version' => 'v2.1.2',
-      'version' => '2.1.2.0',
+      'pretty_version' => 'v3.0.2',
+      'version' => '3.0.2.0',
       'aliases' => 
       array (
       ),
-      'reference' => 'add283790d140e485b5f3dc14d2ce6c7d944277d',
+      'reference' => '85931d6a242c5b562f82220945fc25a01afba3f5',
     ),
     'endroid/qr-code' => 
     array (
@@ -107,15 +107,6 @@ private static $installed = array (
       ),
       'reference' => 'd9f12af739c11c70fa1e8132dba8f849395e939b',
     ),
-    'league/plates' => 
-    array (
-      'pretty_version' => 'v3.4.0',
-      'version' => '3.4.0.0',
-      'aliases' => 
-      array (
-      ),
-      'reference' => '6d3ee31199b536a4e003b34a356ca20f6f75496a',
-    ),
     'phpcfdi/cfdi-cleaner' => 
     array (
       'pretty_version' => 'v1.2.0',
@@ -125,15 +116,6 @@ private static $installed = array (
       ),
       'reference' => 'eb1af427a20d9bf0916eedcb6db1925c7a5f1305',
     ),
-    'phpcfdi/cfditopdf' => 
-    array (
-      'pretty_version' => 'v0.3.4',
-      'version' => '0.3.4.0',
-      'aliases' => 
-      array (
-      ),
-      'reference' => '2fda6ba32bdb0fdb637574e35e078fd68ead5b3f',
-    ),
     'phpcfdi/credentials' => 
     array (
       'pretty_version' => 'v1.1.4',
@@ -142,15 +124,6 @@ private static $installed = array (
       array (
       ),
       'reference' => '28f4707c07add5b17e7831eb9b734440e0ea4db0',
-    ),
-    'spipu/html2pdf' => 
-    array (
-      'pretty_version' => 'v5.2.4',
-      'version' => '5.2.4.0',
-      'aliases' => 
-      array (
-      ),
-      'reference' => 'dcb5671cac3d60ff486cf16df389e3bd0dc16ba4',
     ),
     'symfony/polyfill-php80' => 
     array (
@@ -169,15 +142,6 @@ private static $installed = array (
       array (
       ),
       'reference' => '95440409896f90a5f85db07a32b517ecec17fa4c',
-    ),
-    'tecnickcom/tcpdf' => 
-    array (
-      'pretty_version' => '6.4.4',
-      'version' => '6.4.4.0',
-      'aliases' => 
-      array (
-      ),
-      'reference' => '42cd0f9786af7e5db4fcedaa66f717b0d0032320',
     ),
   ),
 );
