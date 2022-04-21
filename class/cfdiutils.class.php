@@ -113,6 +113,7 @@ class Cfdiutils
 		// método de ayuda para establecer las sumas del comprobante e impuestos
 		// con base en la suma de los conceptos y la agrupación de sus impuestos
 		$creator->addSumasConceptos(null, 2);
+		// $creator->pago
 		$pemPrivateKeyContents = PrivateKey::convertDerToPem(file_get_contents('file://' . $key), $passkey !== '');
 		$creator->addSello($pemPrivateKeyContents, $passkey);
 		// método de ayuda para generar el sello (obtener la cadena de origen y firmar con la llave privada)

@@ -72,7 +72,7 @@ if (isset($user->socid) && $user->socid > 0) {
 	$action = '';
 	$socid = $user->socid;
 }
-
+$place = GETPOST('place','alpha');
 $max = 5;
 $now = dol_now();
 
@@ -94,9 +94,15 @@ $formfile = new FormFile($db);
 llxHeader("", $langs->trans("CfdiutilsArea"));
 
 print load_fiche_titre($langs->trans("CfdiutilsArea"), '', 'cfdiutils.png@cfdiutils');
-
+print 'esto es place'.$place.'<br>';
 print '<div class="fichecenter"><div class="fichethirdleft">';
-
+print '<select name="seleccion" id="seleccion">';
+print '<option  onclick="location.href='.$_SERVER['PHP_SELF'].'?add_pedimento=1&invoice=" value="1">la selección es 1</option>';
+print '<option  onclick="location.href='.$_SERVER['PHP_SELF'].'?add_pedimento=1&invoice=" value="1">la selección es 1</option>';
+print '<option  onclick="location.href='.$_SERVER['PHP_SELF'].'?add_pedimento=1&invoice=" value="1">la selección es 1</option>';
+print '<option  onclick="location.href='.$_SERVER['PHP_SELF'].'?add_pedimento=1&invoice=" value="1">la selección es 1</option>';
+print '</select>';
+// print ' onclick="location.href=\'list.php?action=change&contextpage=poslist&idcustomer='.$obj->rowid.'&place='.urlencode($place).'\'"';
 
 /* BEGIN MODULEBUILDER DRAFT MYOBJECT
 // Draft MyObject

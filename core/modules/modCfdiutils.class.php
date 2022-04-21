@@ -617,39 +617,65 @@ class modCfdiutils extends DolibarrModules
 			}
 		}
 
-		// Document templates
-		// $moduledir = 'cfdiutils';
-		// $myTmpObjects = array();
-		// $myTmpObjects['Facture'] = array('includerefgeneration' => 0, 'includedocgeneration' => 0);
-
-		// foreach ($myTmpObjects as $myTmpObjectKey => $myTmpObjectArray) {
-		// 	if ($myTmpObjectKey == 'Facture') {
-		// 		continue;
-		// 	}
-		// 	if ($myTmpObjectArray['includerefgeneration']) {
-		// 		$src = DOL_DOCUMENT_ROOT . '/install/doctemplates/cfdiutils/template_factures.odt';
-		// 		$dirodt = DOL_DATA_ROOT . '/doctemplates/cfdiutils';
-		// 		$dest = $dirodt . '/template_factures.odt';
-
-		// 		if (file_exists($src) && !file_exists($dest)) {
-		// 			require_once DOL_DOCUMENT_ROOT . '/core/lib/files.lib.php';
-		// 			dol_mkdir($dirodt);
-		// 			$result = dol_copy($src, $dest, 0, 0);
-		// 			if ($result < 0) {
-		// 				$langs->load("errors");
-		// 				$this->error = $langs->trans('ErrorFailToCopyFile', $src, $dest);
-		// 				return 0;
-		// 			}
+		// $sql = "SELECT rowid from " . MAIN_DB_PREFIX . "const where name = 'PAYMENT_ADDON_PDF_ODT_PATH'";
+		// $resql = $this->db->query($sql);
+		// if ($resql) {
+		// 	$num = $this->db->num_rows($resql);
+		// 	if ($num == 1) {
+		// 		$obj = $this->db->fetch_object($resql);
+		// 		$sql = "DELETE from " . MAIN_DB_PREFIX . "const where name = 'PAYMENT_ADDON_PDF_ODT_PATH'";
+		// 		$result = $this->db->query($sql);
+		// 		if ($result) {
+		// 			$sql = "INSERT INTO " . MAIN_DB_PREFIX . "const (";
+		// 			$sql .= "name";
+		// 			$sql .= ",entity";
+		// 			$sql .= ",value";
+		// 			$sql .= ",type";
+		// 			$sql .= ",visible";
+		// 			$sql .= ") VALUES (";
+		// 			$sql .= "'PAYMENT_ADDON_PDF_ODT_PATH'";
+		// 			$sql .= "," . $conf->entity;
+		// 			$sql .= ",'DOL_DATA_ROOT/doctemplates/payments'";
+		// 			$sql .= ",'chaine'";
+		// 			$sql .= "," . 0 . ")";
+		// 			$this->db->query($sql);
 		// 		}
-
-		// 		$sql = array_merge($sql, array(
-		// 			"DELETE FROM " . MAIN_DB_PREFIX . "document_model WHERE nom = 'standard_" . strtolower($myTmpObjectKey) . "' AND type = '" . strtolower($myTmpObjectKey) . "' AND entity = " . $conf->entity,
-		// 			"INSERT INTO " . MAIN_DB_PREFIX . "document_model (nom, type, entity) VALUES('standard_" . strtolower($myTmpObjectKey) . "','" . strtolower($myTmpObjectKey) . "'," . $conf->entity . ")",
-		// 			"DELETE FROM " . MAIN_DB_PREFIX . "document_model WHERE nom = 'generic_" . strtolower($myTmpObjectKey) . "_odt' AND type = '" . strtolower($myTmpObjectKey) . "' AND entity = " . $conf->entity,
-		// 			"INSERT INTO " . MAIN_DB_PREFIX . "document_model (nom, type, entity) VALUES('generic_" . strtolower($myTmpObjectKey) . "_odt', '" . strtolower($myTmpObjectKey) . "', " . $conf->entity . ")"
-		// 		));
 		// 	}
 		// }
+
+		// Document templates
+		$moduledir = 'cfdiutils';
+		$myTmpObjects = array();
+		$myTmpObjects['Payment'] = array('includerefgeneration' => 0, 'includedocgeneration' => 0);
+
+		foreach ($myTmpObjects as $myTmpObjectKey => $myTmpObjectArray) {
+			if ($myTmpObjectKey == 'Payment') {
+				continue;
+			}
+			if ($myTmpObjectArray['includerefgeneration']) {
+				$src = DOL_DOCUMENT_ROOT . '/install/doctemplates/cfdiutils/template_payment.odt';
+				$dirodt = DOL_DATA_ROOT . '/doctemplates/cfdiutils';
+				$dest = $dirodt . '/template_payment.odt';
+
+				if (file_exists($src) && !file_exists($dest)) {
+					require_once DOL_DOCUMENT_ROOT . '/core/lib/files.lib.php';
+					dol_mkdir($dirodt);
+					$result = dol_copy($src, $dest, 0, 0);
+					if ($result < 0) {
+						$langs->load("errors");
+						$this->error = $langs->trans('ErrorFailToCopyFile', $src, $dest);
+						return 0;
+					}
+				}
+
+				$sql = array_merge($sql, array(
+					"DELETE FROM " . MAIN_DB_PREFIX . "document_model WHERE nom = 'standard_" . strtolower($myTmpObjectKey) . "' AND type = '" . strtolower($myTmpObjectKey) . "' AND entity = " . $conf->entity,
+					"INSERT INTO " . MAIN_DB_PREFIX . "document_model (nom, type, entity) VALUES('standard_" . strtolower($myTmpObjectKey) . "','" . strtolower($myTmpObjectKey) . "'," . $conf->entity . ")",
+					"DELETE FROM " . MAIN_DB_PREFIX . "document_model WHERE nom = 'generic_" . strtolower($myTmpObjectKey) . "_odt' AND type = '" . strtolower($myTmpObjectKey) . "' AND entity = " . $conf->entity,
+					"INSERT INTO " . MAIN_DB_PREFIX . "document_model (nom, type, entity) VALUES('generic_" . strtolower($myTmpObjectKey) . "_odt', '" . strtolower($myTmpObjectKey) . "', " . $conf->entity . ")"
+				));
+			}
+		}
 
 		return $this->_init($sql, $options);
 	}

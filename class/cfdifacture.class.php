@@ -151,14 +151,15 @@ class Cfdifacture extends Facture
 				}
 
 				if (!$error) {
+
 					$this->db->commit();
 					return 'InsertSuccess';
+
 				} else {
 					$this->db->rollback();
 					return -$error;
 				}
 			} else {
-
 				return 'RecordExists';
 			}
 		}
@@ -169,6 +170,8 @@ class Cfdifacture extends Facture
 	{
 		$error = 0;
 		$this->fk_facture = $this->id;
+		$this->forma_pago = $this->__getFormaPago($this->forma_pago);
+
 		$sql = "UPDATE " . MAIN_DB_PREFIX . "cfdiutils_facture ";
 		$sql .= "SET";
 		if ($this->uuid) {
@@ -176,6 +179,8 @@ class Cfdifacture extends Facture
 		} else {
 			$sql .=  " error = '" . $this->error . "'";
 		}
+
+
 		$sql .= $this->fecha_timbrado ? ",fecha_timbrado = '" . $this->fecha_timbrado . "'" : ' ';
 		$sql .= $this->cer_csd ? ",cer_csd = '" . $this->cer_csd . "'" : ' ';
 		$sql .= $this->cer_sat ? ",cer_sat = '" . $this->cer_sat . "'" : ' ';
@@ -196,8 +201,11 @@ class Cfdifacture extends Facture
 		}
 
 		if (!$error) {
+
 			$this->db->commit();
+			$this->db->free();
 			return 'InsertSuccess';
+
 		} else {
 			$this->db->rollback();
 			return -$error;
@@ -311,7 +319,9 @@ class Cfdifacture extends Facture
 	{
 		$conceptos = [];
 		$cfdiproduct = new Cfdiproduct($this->db);
+
 		$i = 0;
+
 		//TODO: ADD freelines, multicurrency support
 		foreach ($this->lines as $line) {
 
@@ -319,14 +329,13 @@ class Cfdifacture extends Facture
 
 				$cfdiproduct->fetch($line->fk_product);
 				$cfdiproduct->getFiscal();
-
 				$conceptos[$i] = [
 					'ClaveProdServ' => $cfdiproduct->claveprodserv,
 					'Cantidad' => $line->qty,
 					'ClaveUnidad' => $cfdiproduct->umed,
 					'Descripcion' => $line->description ? $cfdiproduct->ref . ' - ' . $line->description : $cfdiproduct->ref . ' - ' . $cfdiproduct->label,
-					'ValorUnitario' => round($line->subprice, 2),
-					'Importe' => round($line->total_ht, 2),
+					'ValorUnitario' => abs(round($line->subprice, 2)),
+					'Importe' => abs(round($line->total_ht, 2)),
 					'ObjetoImp' => $cfdiproduct->objetoimp, //Check first if product is exempt VAT, if VAT 0% and Code VAT is EXE
 
 				];
@@ -334,11 +343,11 @@ class Cfdifacture extends Facture
 					$line->vat_src_code = '002';
 				}
 				$conceptos['Traslado'][$i] = [
-					'Base' => round($line->total_ht, 2),
+					'Base' => abs(round($line->total_ht, 2)),
 					'Impuesto' => $line->vat_src_code,
 					'TipoFactor' => isset($line->vat_src_code) ? "Tasa" : "Exento", //Check objetoimp
 					'TasaOCuota' => number_format(($line->tva_tx / 100), 6),
-					'Importe' => round($line->total_tva, 2),
+					'Importe' => abs(round($line->total_tva, 2)),
 				];
 			} else {
 			}
@@ -405,7 +414,6 @@ class Cfdifacture extends Facture
 		}
 		return $receptor;
 	}
-
 
 	//Crud Relationship
 	public function getRelationship($socid)
@@ -522,7 +530,6 @@ class Cfdifacture extends Facture
 				$i++;
 			}
 			return $datatable;
-
 		} else {
 			return 0;
 		}
@@ -530,7 +537,7 @@ class Cfdifacture extends Facture
 
 	public function deleteRel($id)
 	{
-		$sql = "DELETE FROM ".MAIN_DB_PREFIX."cfdiutils_facture_rel WHERE rowid = ".$id;
+		$sql = "DELETE FROM " . MAIN_DB_PREFIX . "cfdiutils_facture_rel WHERE rowid = " . $id;
 		$result = $this->db->query($sql);
 		return $result;
 	}
@@ -567,6 +574,7 @@ class Cfdifacture extends Facture
 		$sql = "SELECT fp.code from " . MAIN_DB_PREFIX . "c_cfdiutils_formapago fp";
 		$sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "c_paiement cp on cp.id = fp.fk_code";
 		$sql .= " WHERE cp.code ='" . $code . "'";
+
 		$resql = $this->db->query($sql);
 		if ($resql) {
 			$num = $this->db->num_rows($resql);
@@ -574,11 +582,8 @@ class Cfdifacture extends Facture
 				$obj = $this->db->fetch_object($resql);
 				return $obj->code;
 			} else {
-
-				return $code;
+				return '99';
 			}
-		} else {
-			return '99';
 		}
 	}
 }

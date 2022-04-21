@@ -50,6 +50,10 @@ function cfdiutilsAdminPrepareHead()
 	$head[$h][2] = 'paytype';
 	$h++;
 
+	$head[$h][0] = dol_buildpath("/cfdiutils/admin/documents.php", 1);
+	$head[$h][1] = $langs->trans("documents");
+	$head[$h][2] = 'documents';
+	$h++;
 
 	$head[$h][0] = dol_buildpath("/cfdiutils/admin/about.php", 1);
 	$head[$h][1] = $langs->trans("About");
@@ -69,4 +73,17 @@ function cfdiutilsAdminPrepareHead()
 	complete_head_from_modules($conf, $langs, $object, $head, $h, 'cfdiutils@cfdiutils', 'remove');
 
 	return $head;
+}
+
+function getParcialAmount($fk_payment,$fk_facture){
+
+	global $conf,$db;
+
+	$invoice = new Cfdifacture($fk_facture);
+	$payment = new Cfdipayment($fk_payment);
+
+	if($conf->multicurrency->enabled){
+
+	}
+
 }

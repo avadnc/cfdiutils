@@ -70,3 +70,5 @@ dataFiscalRelationship= Documentos relacionados
 adddataFiscalRelationship = Añadir documentos relacionados
 fiscalActions = Acciones Fiscales
 statusFiscalCFDI= Estado del CFDI
+GenericCFDINumRefModelDesc= Numeración fiscal una vez sellada y timbrada la factura
+PDFCFDISpongeDescription = PDF Sponge CFDI

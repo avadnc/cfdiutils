@@ -1,10 +1,8 @@
 <?php
-/* Copyright (C) 2003-2004 Rodolphe Quiedeville <rodolphe@quiedeville.org>
+/* Copyright (C) 2003-2005 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2004      Eric Seigne          <eric.seigne@ryxeo.com>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@inodbox.com>
- * Copyright (C) 2006      Andre Cianfarani     <acianfa@free.fr>
- * Copyright (C) 2012      Juanjo Menent	    <jmenent@2byte.es>
  * Copyright (C) 2014      Marcos García        <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -23,20 +21,34 @@
  */
 
 /**
- *  \file			htdocs/core/modules/cfdiutils/modules_facture.php
- *  \ingroup		cfdiutils
- *  \brief			File that contains parent class for factures document models and parent class for factures numbering models
+ *	\file       htdocs/core/modules/facture/modules_facture.php
+ *	\ingroup    facture
+ *	\brief      File that contains parent class for invoices models
+ *              and parent class for invoices numbering models
  */
 
 require_once DOL_DOCUMENT_ROOT.'/core/class/commondocgenerator.class.php';
-require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php'; // required for use by classes that inherit
+require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
+require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php'; // Required because used in classes that inherit
 
 
 /**
- *	Parent class for documents models
+ *	Parent class of invoice document generators
  */
-abstract class ModelePDFFacture extends CommonDocGenerator
+abstract class ModelePDFCfdifactures extends CommonDocGenerator
 {
+	/**
+	 * @var string Error code (or message)
+	 */
+	public $error = '';
+
+	public $tva;
+	public $tva_array;
+	public $localtax1;
+	public $localtax2;
+
+	public $atleastonediscount = 0;
+	public $atleastoneratenotnull = 0;
 
 	// phpcs:disable PEAR.NamingConventions.ValidFunctionName.ScopeNotCamelCaps
 	/**
@@ -51,7 +63,7 @@ abstract class ModelePDFFacture extends CommonDocGenerator
 		// phpcs:enable
 		global $conf;
 
-		$type = 'facture';
+		$type = 'cfdiutils';
 		$list = array();
 
 		include_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
@@ -61,12 +73,10 @@ abstract class ModelePDFFacture extends CommonDocGenerator
 	}
 }
 
-
-
 /**
- *  Parent class to manage numbering of Facture
+ *  Parent class of invoice reference numbering templates
  */
-abstract class ModeleNumRefFacture
+abstract class ModeleNumRefCfdiactures
 {
 	/**
 	 * @var string Error code (or message)
@@ -74,9 +84,9 @@ abstract class ModeleNumRefFacture
 	public $error = '';
 
 	/**
-	 *	Return if a module can be used or not
+	 * Return if a module can be used or not
 	 *
-	 *	@return		boolean     true if module can be used
+	 * @return	boolean     true if module can be used
 	 */
 	public function isEnabled()
 	{
@@ -84,26 +94,26 @@ abstract class ModeleNumRefFacture
 	}
 
 	/**
-	 *	Returns the default description of the numbering template
+	 * Renvoi la description par defaut du modele de numerotation
 	 *
-	 *	@return     string      Texte descripif
+	 * @return    string      Texte descripif
 	 */
 	public function info()
 	{
 		global $langs;
-		$langs->load("cfdiutils@cfdiutils");
+		$langs->load("bills","cfdiutils@cfdiutils");
 		return $langs->trans("NoDescription");
 	}
 
 	/**
-	 *	Returns an example of numbering
+	 * Return an example of numbering
 	 *
-	 *	@return     string      Example
+	 * @return	string      Example
 	 */
 	public function getExample()
 	{
 		global $langs;
-		$langs->load("cfdiutils@cfdiutils");
+		$langs->load("bills");
 		return $langs->trans("NoExample");
 	}
 
@@ -111,30 +121,30 @@ abstract class ModeleNumRefFacture
 	 *  Checks if the numbers already in the database do not
 	 *  cause conflicts that would prevent this numbering working.
 	 *
-	 *	@param	Object		$object		Object we need next value for
-	 *	@return boolean     			false if conflict, true if ok
+	 * @return	boolean     false if conflict, true if ok
 	 */
-	public function canBeActivated($object)
+	public function canBeActivated()
 	{
 		return true;
 	}
 
 	/**
-	 *	Returns next assigned value
+	 * Renvoi prochaine valeur attribuee
 	 *
-	 *	@param	Object		$object		Object we need next value for
-	 *	@return	string      Valeur
+	 * @param	Societe		$objsoc		Objet societe
+	 * @param   Facture		$facture	Objet facture
+	 * @return  string      			Value
 	 */
-	public function getNextValue($object)
+	public function getNextValue($objsoc, $facture)
 	{
 		global $langs;
 		return $langs->trans("NotAvailable");
 	}
 
 	/**
-	 *	Returns version of numbering module
+	 * Renvoi version du modele de numerotation
 	 *
-	 *	@return     string      Valeur
+	 * @return    string      Valeur
 	 */
 	public function getVersion()
 	{
@@ -143,16 +153,14 @@ abstract class ModeleNumRefFacture
 
 		if ($this->version == 'development') {
 			return $langs->trans("VersionDevelopment");
-		}
-		if ($this->version == 'experimental') {
+		} elseif ($this->version == 'experimental') {
 			return $langs->trans("VersionExperimental");
-		}
-		if ($this->version == 'dolibarr') {
+		} elseif ($this->version == 'dolibarr') {
 			return DOL_VERSION;
-		}
-		if ($this->version) {
+		} elseif ($this->version) {
 			return $this->version;
+		} else {
+			return $langs->trans("NotAvailable");
 		}
-		return $langs->trans("NotAvailable");
 	}
 }
